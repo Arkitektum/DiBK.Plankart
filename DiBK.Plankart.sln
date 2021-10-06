@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31624.102
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiBK.Plankart.Web", "DiBK.Plankart.Web\DiBK.Plankart.Web.csproj", "{F4B35FB6-A167-4298-8D6F-12CEEB5C4E2E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiBK.Plankart.Application", "DiBK.Plankart.Application\DiBK.Plankart.Application.csproj", "{F7C9C8F3-3B02-4B0D-9DEF-61A7E84FCFC9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4B35FB6-A167-4298-8D6F-12CEEB5C4E2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4B35FB6-A167-4298-8D6F-12CEEB5C4E2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4B35FB6-A167-4298-8D6F-12CEEB5C4E2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4B35FB6-A167-4298-8D6F-12CEEB5C4E2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7C9C8F3-3B02-4B0D-9DEF-61A7E84FCFC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7C9C8F3-3B02-4B0D-9DEF-61A7E84FCFC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7C9C8F3-3B02-4B0D-9DEF-61A7E84FCFC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7C9C8F3-3B02-4B0D-9DEF-61A7E84FCFC9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3A18DE5E-D80B-4D3D-A87F-0712793D8FF6}
+	EndGlobalSection
+EndGlobal
