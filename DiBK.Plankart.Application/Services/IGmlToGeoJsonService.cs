@@ -7,6 +7,6 @@ namespace DiBK.Plankart.Application.Services
 {
     public interface IGmlToGeoJsonService
     {
-        Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geometryFieldMappings = null);
+        Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geoElementMappings = null);
     }
 }

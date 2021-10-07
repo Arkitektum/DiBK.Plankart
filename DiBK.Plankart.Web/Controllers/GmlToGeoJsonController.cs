@@ -45,7 +45,7 @@ namespace DiBK.Plankart.Controllers
                 if (messages.Any())
                     return BadRequest("Ugyldig GML-fil");
 
-                var document = await _gmlToGeoJsonService.CreateGeoJsonDocument(file);
+                var document = await _gmlToGeoJsonService.CreateGeoJsonDocument(file, new() { { "RpPåskrift", "tekstplassering" } });
                 var serialized = JsonConvert.SerializeObject(document, _jsonSerializerSettings);
 
                 return Ok(serialized);

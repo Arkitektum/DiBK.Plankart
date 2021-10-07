@@ -7,7 +7,6 @@ using OSGeo.OGR;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -22,7 +21,7 @@ namespace DiBK.Plankart.Application.Services
     {
         private static readonly Regex _epsgRegex = new(@"^(http:\/\/www\.opengis\.net\/def\/crs\/EPSG\/0\/|^urn:ogc:def:crs:EPSG::)(?<epsg>\d+)$", RegexOptions.Compiled);
 
-        public async Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geoFieldMappings = null)
+        public async Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geoElementMappings = null)
         {
             var document = await LoadXDocument(gmlFile);
 
@@ -34,7 +33,7 @@ namespace DiBK.Plankart.Application.Services
 
             foreach (var featureMember in featureMembers)
             {
-                var geoElement = GetGeometryElement(featureMember, geoFieldMappings);
+                var geoElement = GetGeometryElement(featureMember, geoElementMappings);
 
                 if (geoElement == null)
                     continue;
@@ -68,9 +67,9 @@ namespace DiBK.Plankart.Application.Services
             }
         }
 
-        private static XElement GetGeometryElement(XElement featureMember, Dictionary<string, string> geoFieldMappings)
+        private static XElement GetGeometryElement(XElement featureMember, Dictionary<string, string> geoElementMappings)
         {
-            if (geoFieldMappings != null && geoFieldMappings.TryGetValue(featureMember.GetName(), out var xPath))
+            if (geoElementMappings != null && geoElementMappings.TryGetValue(featureMember.GetName(), out var xPath))
                 xPath = $"*:{xPath}/*";
             else
                 xPath = "*/gml:*";
