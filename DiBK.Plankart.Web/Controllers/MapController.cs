@@ -13,7 +13,7 @@ namespace DiBK.Plankart.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class GmlToGeoJsonController : BaseController
+    public class MapController : BaseController
     {
         private static readonly JsonSerializerSettings _jsonSerializerSettings = new()
         {
@@ -21,19 +21,19 @@ namespace DiBK.Plankart.Controllers
         };
 
         private readonly IXmlSchemaValidator _xmlSchemaValidator;
-        private readonly IGmlToGeoJsonService _gmlToGeoJsonService;
+        private readonly IPlankartService _plankartService;
 
-        public GmlToGeoJsonController(
+        public MapController(
             IXmlSchemaValidator xmlSchemaValidator,
-            IGmlToGeoJsonService gmlToGeoJsonService,
-            ILogger<GmlToGeoJsonController> logger) : base(logger)
+            IPlankartService plankartService,
+            ILogger<MapController> logger) : base(logger)
         {
             _xmlSchemaValidator = xmlSchemaValidator;
-            _gmlToGeoJsonService = gmlToGeoJsonService;
+            _plankartService = plankartService;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateGeoJsonDocument(IFormFile file)
+        public async Task<IActionResult> CreateMapDocument(IFormFile file)
         {
             try
             {
@@ -45,7 +45,7 @@ namespace DiBK.Plankart.Controllers
                 if (messages.Any())
                     return BadRequest("Ugyldig GML-fil");
 
-                var document = await _gmlToGeoJsonService.CreateGeoJsonDocument(file, new() { { "RpPåskrift", "tekstplassering" } });
+                var document = await _plankartService.CreateMapDocument(file);
                 var serialized = JsonConvert.SerializeObject(document, _jsonSerializerSettings);
 
                 return Ok(serialized);

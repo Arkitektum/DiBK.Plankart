@@ -1,6 +1,5 @@
 ﻿using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
@@ -8,28 +7,20 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
-using Wmhelp.XPath2;
 using OGRGeometry = OSGeo.OGR.Geometry;
 
 namespace DiBK.Plankart.Application.Services
 {
     public class GmlToGeoJsonService : IGmlToGeoJsonService
     {
-        private static readonly Regex _epsgRegex = new(@"^(http:\/\/www\.opengis\.net\/def\/crs\/EPSG\/0\/|^urn:ogc:def:crs:EPSG::)(?<epsg>\d+)$", RegexOptions.Compiled);
-
-        public async Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geoElementMappings = null)
+        public GeoJsonFeatureCollection CreateGeoJsonDocument(XDocument document, Dictionary<string, string> geoElementMappings = null)
         {
-            var document = await LoadXDocument(gmlFile);
-
             if (document == null)
                 return null;
 
-            var featureDocument = new GeoJsonDocument(gmlFile.FileName, GetEpsg(document));
             var featureMembers = document.GetElements("//*:featureMember/* | //*:featureMembers/*");
+            var featureCollection = new GeoJsonFeatureCollection();
 
             foreach (var featureMember in featureMembers)
             {
@@ -46,25 +37,13 @@ namespace DiBK.Plankart.Application.Services
                 var feature = new GeoJsonFeature { Geometry = GetGeometry(geometry) };
 
                 geoElement.Remove();
-                
+
                 feature.Properties = CreateProperties(featureMember, featureMember.GetName(), featureMember.GetAttribute("gml:id"));
 
-                featureDocument.FeatureCollection.Features.Add(feature);
+                featureCollection.Features.Add(feature);
             }
 
-            return featureDocument;
-        }
-
-        private static async Task<XDocument> LoadXDocument(IFormFile gmlFile)
-        {
-            try
-            {
-                return await XDocument.LoadAsync(gmlFile.OpenReadStream(), LoadOptions.None, new CancellationToken());
-            }
-            catch
-            {
-                return null;
-            }
+            return featureCollection;
         }
 
         private static XElement GetGeometryElement(XElement featureMember, Dictionary<string, string> geoElementMappings)
@@ -75,18 +54,6 @@ namespace DiBK.Plankart.Application.Services
                 xPath = "*/gml:*";
 
             return featureMember.GetElement(xPath);
-        }
-
-        private static string GetEpsg(XDocument document)
-        {
-            var srsName = document.XPath2SelectOne<XAttribute>("(//*[@srsName]/@srsName)[1]")?.Value;
-
-            if (srsName == null)
-                return null;
-
-            var match = _epsgRegex.Match(srsName);
-
-            return match.Success ? $"EPSG:{match.Groups["epsg"].Value}" : null;
         }
 
         private static OGRGeometry GetOGRGeometry(XElement geoElement)

@@ -1,12 +1,11 @@
 ﻿using DiBK.Plankart.Application.Models;
-using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace DiBK.Plankart.Application.Services
 {
     public interface IGmlToGeoJsonService
     {
-        Task<GeoJsonDocument> CreateGeoJsonDocument(IFormFile gmlFile, Dictionary<string, string> geoElementMappings = null);
+        GeoJsonFeatureCollection CreateGeoJsonDocument(XDocument document, Dictionary<string, string> geoElementMappings = null);
     }
 }

@@ -31,6 +31,7 @@ namespace DiBK.Plankart
             });
 
             services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
+            services.AddTransient<IPlankartService, PlankartService>();
 
             services.AddXmlSchemaValidator(options =>
             {
