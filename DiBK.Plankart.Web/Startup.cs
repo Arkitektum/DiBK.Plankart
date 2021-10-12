@@ -27,7 +27,7 @@ namespace DiBK.Plankart
 
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.GmlMap", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
             });
 
             services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
@@ -41,7 +41,7 @@ namespace DiBK.Plankart
                     "http://skjema.geonorge.no/SOSITEST/produktspesifikasjon/Reguleringsplanforslag/5.0/reguleringsplanforslag-5.0_rev20210827.xsd"
                 );
 
-                options.CacheFilesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "DiBK.GmlMap/XSD");
+                options.CacheFilesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "DiBK.Plankart/XSD");
                 options.CacheDurationDays = 30;
             });
         }
@@ -63,7 +63,7 @@ namespace DiBK.Plankart
 
             app.UseSwagger();
 
-            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "DiBK.GmlMap v1"));
+            app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "DiBK.Plankart v1"));
 
             app.UseHttpsRedirection();
 
