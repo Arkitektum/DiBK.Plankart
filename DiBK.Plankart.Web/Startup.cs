@@ -1,5 +1,6 @@
 using Arkitektum.XmlSchemaValidator.Config;
 using DiBK.Plankart.Application.Services;
+using DiBK.RuleValidator.Config;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +9,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using System;
+using System.Globalization;
 using System.IO;
+using System.Reflection;
 
 namespace DiBK.Plankart
 {
@@ -30,13 +33,10 @@ namespace DiBK.Plankart
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
             });
 
-            services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
-            services.AddTransient<IPlankartService, PlankartService>();
-
             services.AddXmlSchemaValidator(options =>
             {
                 options.AddSchema(
-                    "Plankart",
+                    "Reguleringsplanforslag",
                     "http://skjema.geonorge.no/SOSI/produktspesifikasjon/Reguleringsplanforslag/5.0",
                     "http://skjema.geonorge.no/SOSITEST/produktspesifikasjon/Reguleringsplanforslag/5.0/reguleringsplanforslag-5.0_rev20210827.xsd"
                 );
@@ -44,10 +44,26 @@ namespace DiBK.Plankart
                 options.CacheFilesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "DiBK.Plankart/XSD");
                 options.CacheDurationDays = 30;
             });
+
+            services.AddRuleValidator(new[] {
+                Assembly.Load("DiBK.RuleValidator.Rules.Gml"),
+                Assembly.Load("Reguleringsplanforslag.Rules")
+            });
+
+            services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
+            services.AddTransient<IMapDocumentService, MapDocumentService>();
+            services.AddTransient<IValidationService, ValidationService>();
+            services.AddHttpClient<IStaticDataService, StaticDataService>();
+
+            services.Configure<StaticDataConfig>(Configuration.GetSection(StaticDataConfig.SectionName));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            var cultureInfo = new CultureInfo("nb-NO");
+            CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+            CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
+
             Ogr.RegisterAll();
             Ogr.UseExceptions();
 

@@ -1,5 +1,6 @@
 ﻿using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models;
+using DiBK.Plankart.Application.Models.Map;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OSGeo.OGR;

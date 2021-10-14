@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DiBK.Plankart.Application.Models
+namespace DiBK.Plankart.Application.Models.Map
 {
     public class GeoJsonFeatureCollection
     {

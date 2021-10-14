@@ -1,4 +1,4 @@
-﻿using DiBK.Plankart.Application.Models;
+﻿using DiBK.Plankart.Application.Models.Map;
 using System.Collections.Generic;
 using System.Xml.Linq;
 

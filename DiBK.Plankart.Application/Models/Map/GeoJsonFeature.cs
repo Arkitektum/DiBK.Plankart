@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace DiBK.Plankart.Application.Models
+namespace DiBK.Plankart.Application.Models.Map
 {
     public class GeoJsonFeature
     {

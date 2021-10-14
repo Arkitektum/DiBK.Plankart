@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using DiBK.Plankart.Application.Exceptions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -22,6 +23,7 @@ namespace DiBK.Plankart.Controllers
 
             return exception switch
             {
+                CouldNotLoadXDocumentException => BadRequest(exception.Message),
                 ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest(),
                 Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
                 _ => null,

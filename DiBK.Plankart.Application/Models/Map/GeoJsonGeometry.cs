@@ -1,4 +1,4 @@
-﻿namespace DiBK.Plankart.Application.Models
+﻿namespace DiBK.Plankart.Application.Models.Map
 {
     public abstract class GeoJsonGeometry
     {

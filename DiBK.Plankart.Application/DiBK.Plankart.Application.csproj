@@ -6,10 +6,25 @@
 
   <ItemGroup>
     <PackageReference Include="Arkitektum.XmlSchemaValidator" Version="0.1.3" />
+    <PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="1.0.6" />
     <PackageReference Include="MaxRev.Gdal.Core" Version="3.2.0.320" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="XPath2" Version="1.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Reguleringsplanforslag.Rules">
+      <HintPath>Rules\Reguleringsplanforslag.Rules.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Rules\Reguleringsplanforslag.Rules.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
