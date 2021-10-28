@@ -2,6 +2,7 @@
 using DiBK.Plankart.Application.Models.Map;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,9 +13,6 @@ namespace DiBK.Plankart.Application.Services
 {
     public class MapDocumentService : IMapDocumentService
     {
-        private static readonly Regex _epsgRegex =
-            new(@"^(http:\/\/www\.opengis\.net\/def\/crs\/EPSG\/0\/|^urn:ogc:def:crs:EPSG::)(?<epsg>\d+)$", RegexOptions.Compiled);
-
         private readonly IValidationService _validationService;
         private readonly IGmlToGeoJsonService _gmlToGeoJsonService;
 
@@ -45,13 +43,13 @@ namespace DiBK.Plankart.Application.Services
             if (document == null)
                 return null;
 
-            var (Id, Name) = GetIdAndName(document);
-
             return new MapDocument
             {
-                Id = Id,
-                Name = Name,
+                Id = GetId(document),
+                Name = GetName(document),
+                PlanType = GetPlanType(document),
                 Epsg = GetEpsg(document),
+                VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
                 FileSize = file.Length,
                 GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(document, new() { { "RpPåskrift", "tekstplassering" } }),
@@ -59,32 +57,48 @@ namespace DiBK.Plankart.Application.Services
             };
         }
 
-        private static (string Id, string Name) GetIdAndName(XDocument document)
+        private static string GetId(XDocument document)
         {
-            var navn = document.Root.XPath2SelectElement("//*:Arealplan/*:plannavn")?.Value;
             var kommunenr = document.Root.XPath2SelectElement("//*:Arealplan/*:nasjonalArealplanId//*:kommunenummer")?.Value;
             var planident = document.Root.XPath2SelectElement("//*:Arealplan/*:nasjonalArealplanId//*:planidentifikasjon")?.Value;
             string id = null;
 
-            if (!string.IsNullOrWhiteSpace(navn))
-                navn = navn.Trim();
-
             if (!string.IsNullOrWhiteSpace(kommunenr) && !string.IsNullOrWhiteSpace(planident))
                 id = $"{kommunenr.Trim()}_{planident.Trim()}";
 
-            return (id, navn);
+            return id;
         }
 
-        private static string GetEpsg(XDocument document)
+        private static string GetName(XDocument document)
+        {
+            return document.Root.XPath2SelectElement("//*:Arealplan/*:plannavn")?.Value.Trim();
+        }
+
+        private static string GetPlanType(XDocument document)
+        {
+            var type = document.Root.XPath2SelectElement("//*:Arealplan/*:plantype")?.Value.Trim();
+
+            return type switch
+            {
+                "34" => "Områderegulering",
+                "35" => "Detaljregulering",
+                _ => null
+            };
+        }
+
+        private static Epsg GetEpsg(XDocument document)
         {
             var srsName = document.XPath2SelectOne<XAttribute>("(//*[@srsName]/@srsName)[1]")?.Value;
 
             if (srsName == null)
                 return null;
 
-            var match = _epsgRegex.Match(srsName);
+            return Epsg.Create(srsName);
+        }
 
-            return match.Success ? $"EPSG:{match.Groups["epsg"].Value}" : null;
+        private static string GetVerticalDatum(XDocument document)
+        {
+            return document.XPath2SelectElement("//*:RpRegulertHøyde//*:høydereferansesystem")?.Value;
         }
 
         private static async Task<XDocument> LoadXDocument(IFormFile file)
