@@ -15,16 +15,4 @@
     <PackageReference Include="XPath2" Version="1.1.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Reguleringsplanforslag.Rules">
-      <HintPath>Rules\Reguleringsplanforslag.Rules.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Rules\Reguleringsplanforslag.Rules.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

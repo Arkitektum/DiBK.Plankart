@@ -28,7 +28,7 @@ namespace DiBK.Plankart.Application.Services
         {
             var validationResult = await _validationService.ValidateAsync(file);
 
-            if (!validationResult.XsdValidated)
+            if (!validationResult.XsdValidated || !validationResult.EpsgValidated)
             {
                 return new MapDocument 
                 { 
@@ -47,7 +47,7 @@ namespace DiBK.Plankart.Application.Services
             {
                 Id = GetId(document),
                 Name = GetName(document),
-                PlanType = GetPlanType(document),
+                Title = GetTitle(document),
                 Epsg = GetEpsg(document),
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
@@ -74,14 +74,14 @@ namespace DiBK.Plankart.Application.Services
             return document.Root.XPath2SelectElement("//*:Arealplan/*:plannavn")?.Value.Trim();
         }
 
-        private static string GetPlanType(XDocument document)
+        private static string GetTitle(XDocument document)
         {
             var type = document.Root.XPath2SelectElement("//*:Arealplan/*:plantype")?.Value.Trim();
 
             return type switch
             {
-                "34" => "Områderegulering",
-                "35" => "Detaljregulering",
+                "34" => "Områderegulering for",
+                "35" => "Detaljregulering for",
                 _ => null
             };
         }

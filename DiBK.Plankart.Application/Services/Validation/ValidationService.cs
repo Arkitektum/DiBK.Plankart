@@ -1,91 +1,86 @@
-﻿using Arkitektum.XmlSchemaValidator.Validator;
+﻿using DiBK.Plankart.Application.Exceptions;
 using DiBK.Plankart.Application.Models.Validation;
-using DiBK.RuleValidator;
-using DiBK.RuleValidator.Extensions;
-using DiBK.RuleValidator.Rules.Gml;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Reguleringsplanforslag.Rules.Models;
-using System.Collections.Generic;
-using System.IO;
+using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using System;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
-using static DiBK.Plankart.Application.Helpers.ValidationHelper;
 
 namespace DiBK.Plankart.Application.Services
 {
     public class ValidationService : IValidationService
     {
-        private readonly IRuleValidator _validator;
-        private readonly IXmlSchemaValidator _xsdValidator;
-        private readonly IStaticDataService _staticDataService;
+        private readonly ValidationSettings _settings;
         private readonly ILogger<ValidationService> _logger;
+        public HttpClient Client { get; }
 
         public ValidationService(
-            IRuleValidator validator,
-            IXmlSchemaValidator xsdValidator,
-            IStaticDataService staticDataService,
+            HttpClient client,
+            IOptions<ValidationSettings> options,
             ILogger<ValidationService> logger)
         {
-            _validator = validator;
-            _xsdValidator = xsdValidator;
-            _staticDataService = staticDataService;
+            Client = client;
+            _settings = options.Value;
             _logger = logger;
         }
 
         public async Task<ValidationResult> ValidateAsync(IFormFile file)
         {
-            var inputData = new InputData(file.OpenReadStream(), file.FileName, null);
+            var report = await RunValidationAsync(file);
+            var failedRules = report.Rules.Where(rule => rule.Status == "FAILED");
+            var xsdRule = failedRules.SingleOrDefault(rule => rule.Id == _settings.XsdRuleId);
+            var result = new ValidationResult { Id = report.CorrelationId };
 
-            var result = new ValidationResult
+            if (xsdRule != null)
             {
-                XsdValidationMessages = _xsdValidator.Validate("Reguleringsplanforslag", inputData.Stream)
-            };
-
-            if (!result.XsdValidated)
+                result.XsdValidationMessages = xsdRule.Messages.Select(message => message.Message).ToList();
                 return result;
+            }
 
-            result.Rules = await Validate(inputData);
+            var epsgRule = failedRules.SingleOrDefault(rule => rule.Id == _settings.EpsgRuleId);
+
+            if (epsgRule != null)
+            {
+                result.EpsgValidationMessages = epsgRule.Messages.Select(message => message.Message).ToList();
+                return result;
+            }
+
+            result.Rules = failedRules.ToList();
 
             return result;
         }
 
-        private async Task<IEnumerable<ValidationRule>> Validate(InputData inputData)
+        private async Task<ValidationReport> RunValidationAsync(IFormFile file)
         {
-            inputData.Stream.Seek(0, SeekOrigin.Begin);
-
-            var plankartValidationData = PlankartValidationData.Create(GmlDocument.Create(inputData), await GetKodelister());
-            var gmlValidationData = GmlValidationData.Create(plankartValidationData.Plankart2D.SingleOrDefault());
-
-            _validator.Validate(gmlValidationData, options =>
+            try
             {
-                options.SkipRule<KoordinatreferansesystemForKart3D>();
-            });
+                using var content = new MultipartFormDataContent
+                {
+                    { new StreamContent(file.OpenReadStream()), "plankart2D", file.FileName }
+                };
 
-            _validator.Validate(plankartValidationData, options =>
+                using var request = new HttpRequestMessage(HttpMethod.Post, _settings.ApiUrl)
+                {
+                    Content = content
+                };
+
+                request.Headers.Add("system", "GML-kart - Fellestjenester PLAN");
+
+                using var response = await Client.SendAsync(request);
+                response.EnsureSuccessStatusCode();
+
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                return JsonConvert.DeserializeObject<ValidationReport>(responseString);
+            }
+            catch (Exception exception)
             {
-                options.SkipGroup("Plankart3D");
-                options.SkipGroup("Planbestemmelser");
-                options.SkipGroup("PlankartOgPlanbestemmelser");
-                options.SkipGroup("Oversendelse");
-            });
-
-            plankartValidationData.Dispose();
-            gmlValidationData.Dispose();
-
-            var failedRules = _validator.GetExecutedRules().Where(rule => rule.Status == Status.FAILED);
-
-            return CreateValidationRules(failedRules);
-        }
-
-        private async Task<Kodelister> GetKodelister()
-        {
-            return new Kodelister
-            {
-                Arealformål = await _staticDataService.GetArealformål(),
-                Feltnavn = await _staticDataService.GetFeltnavnArealformål(),
-                Hensynskategori = await _staticDataService.GetHensynskategori()
-            };
+                _logger.LogError(exception, $"Kunne ikke validere filen '{file.FileName}'!");
+                throw new CouldNotValidateException($"Kunne ikke validere filen '{file.FileName}'!", exception);
+            }
         }
     }
 }

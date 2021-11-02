@@ -1,5 +1,4 @@
 ﻿using DiBK.Plankart.Application.Extensions;
-using DiBK.Plankart.Application.Models;
 using DiBK.Plankart.Application.Models.Map;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -9,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml.Linq;
-using OGRGeometry = OSGeo.OGR.Geometry;
 
 namespace DiBK.Plankart.Application.Services
 {
@@ -57,7 +55,7 @@ namespace DiBK.Plankart.Application.Services
             return featureMember.GetElement(xPath);
         }
 
-        private static OGRGeometry GetOGRGeometry(XElement geoElement)
+        private static Geometry GetOGRGeometry(XElement geoElement)
         {
             if (!TryCreateGeometry(geoElement, out var tempGeometry))
                 return null;
@@ -65,7 +63,7 @@ namespace DiBK.Plankart.Application.Services
             if (!geoElement.Has("//gml:Arc"))
                 return tempGeometry;
 
-            OGRGeometry geometry = null;
+            Geometry geometry = null;
             var geometryType = tempGeometry.GetGeometryType();
 
             switch (geometryType)
@@ -87,11 +85,11 @@ namespace DiBK.Plankart.Application.Services
             return geometry;
         }
 
-        private static bool TryCreateGeometry(XElement geoElement, out OGRGeometry geometry)
+        private static bool TryCreateGeometry(XElement geoElement, out Geometry geometry)
         {
             try
             {
-                geometry = OGRGeometry.CreateFromGML(geoElement.ToString());
+                geometry = Geometry.CreateFromGML(geoElement.ToString());
                 return true;
             }
             catch
@@ -101,7 +99,7 @@ namespace DiBK.Plankart.Application.Services
             }
         }
 
-        private static GeoJsonGeometry GetGeometry(OGRGeometry geometry)
+        private static GeoJsonGeometry GetGeometry(Geometry geometry)
         {
             var json = geometry.ExportToJson(Array.Empty<string>());
 

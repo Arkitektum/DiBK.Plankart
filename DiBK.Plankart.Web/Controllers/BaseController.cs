@@ -23,7 +23,7 @@ namespace DiBK.Plankart.Controllers
 
             return exception switch
             {
-                CouldNotLoadXDocumentException => BadRequest(exception.Message),
+                CouldNotLoadXDocumentException or CouldNotValidateException => BadRequest(exception.Message),
                 ArgumentException _ or InvalidDataException _ or FormatException _ => BadRequest(),
                 Exception _ => StatusCode(StatusCodes.Status500InternalServerError),
                 _ => null,
