@@ -2,6 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
+		<UserSecretsId>7725c00f-15d6-4775-9b57-07f3b4fbec95</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,7 +12,7 @@
 	</ItemGroup>	
 
 	<ItemGroup Condition="'$(OS)' == 'Unix'">
-		<PackageReference Include="MaxRev.Gdal.LinuxRuntime.Minimal" Version="3.2.0.310" />
+		<PackageReference Include="MaxRev.Gdal.LinuxRuntime.Minimal" Version="3.2.0.300" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(OS)' != 'Unix'">
