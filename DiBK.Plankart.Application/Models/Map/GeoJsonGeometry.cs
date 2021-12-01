@@ -71,13 +71,13 @@
         }
     }
 
-    public class GeometryType
+    public static class GeometryType
     {
-        public static readonly string Point = "Point";
-        public static readonly string MultiPoint = "MultiPoint";
-        public static readonly string LineString = "LineString";
-        public static readonly string MultiLineString = "MultiLineString";
-        public static readonly string Polygon = "Polygon";
-        public static readonly string MultiPolygon = "MultiPolygon";
+        public const string Point = "Point";
+        public const string MultiPoint = "MultiPoint";
+        public const string LineString = "LineString";
+        public const string MultiLineString = "MultiLineString";
+        public const string Polygon = "Polygon";
+        public const string MultiPolygon = "MultiPolygon";
     }
 }
