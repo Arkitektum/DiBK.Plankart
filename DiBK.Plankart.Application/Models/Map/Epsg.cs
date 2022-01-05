@@ -36,5 +36,7 @@ namespace DiBK.Plankart.Application.Models.Map
 
             return new Epsg($"EPSG:{code}", description);
         }
+
+        public static int CesiumCoordinateSystemCode = 4326;
     }
 }
