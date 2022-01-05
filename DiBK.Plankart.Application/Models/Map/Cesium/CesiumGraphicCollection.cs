@@ -16,13 +16,13 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         {
             return
                 "[\n" +
-                    "\t{\n" +
-                        "\t\tid: 'document',\n" +
-                        $"\t\tname: '{Id}',\n" +
-                        "\t\tversion: '1.0'\n" +
-                    "\t},\n" +
+                    "{" +
+                        "id: 'document'," +
+                        $"name: '{Id}'," +
+                        "version: '1.0'" +
+                    "}," +
                     CesiumGraphics.Aggregate("", (s, graphic) => s + graphic.CzmlRepresentation) +
-                "]";
+                "\n];";
         }
     }
 }

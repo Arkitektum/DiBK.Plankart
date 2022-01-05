@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DiBK.Plankart.Application.Services;
 
 namespace DiBK.Plankart.Application.Models.Map.Cesium
@@ -40,12 +41,12 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         {
             return
                 "{" +
-                    $"id: {_id}'," +
+                    $"id: '{_id}'," +
                     $"name: '{_name}'," +
                     "polygon: {" +
                         "positions: {" +
                             "cartographicDegrees: [" +
-                                string.Join(',', Coordinates) +
+                                Coordinates.Aggregate("", (s, c) => s + $"{c},") +
                             "]" +
                         "}," +
                         "material: {" +
@@ -55,9 +56,7 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
                                 "}" +
                             "}" +
                         "}," +
-                        "heightReference: 'RELATIVE_TO_GROUND'," +    
                         "perPositionHeight: true," +
-                        "" +
                     "}" +
                 "},";
         }
