@@ -158,6 +158,7 @@ namespace DiBK.Plankart.Application.Services
 
             values.Add(new JProperty("name", featureName));
             values.Add(new JProperty("label", $"{featureName} '{gmlId}'"));
+            values.Add(new JProperty("altitudeMode", "clampToGround"));
 
             return jObject["values"] as JObject;
         }
