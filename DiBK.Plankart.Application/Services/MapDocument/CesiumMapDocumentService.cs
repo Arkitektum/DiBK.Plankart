@@ -125,8 +125,8 @@ namespace DiBK.Plankart.Application.Services
 
             return new Rectangle
             {
-                West = transformedLowerCorner.x, South= transformedLowerCorner.y,
-                East = transformedUpperCorner.x, North = transformedUpperCorner.y
+                West = transformedLowerCorner.X, South= transformedLowerCorner.Y,
+                East = transformedUpperCorner.X, North = transformedUpperCorner.Y
             };
         }
 

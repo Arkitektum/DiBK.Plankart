@@ -8,37 +8,59 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using DiBK.Plankart.Application.Exceptions;
 using DiBK.Plankart.Application.Extensions;
+using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Models.Map.Cesium;
 using DiBK.Plankart.Application.Services.CoordinateTransformation;
+using Wmhelp.XPath2;
 using Xunit;
 
 namespace DiBK.Plankart.Application.Tests.Services
 {
     public class CoordinateTransformatorTests
     {
-        [Fact, Trait("Integration", "web-API")]
+        private CoordinateTransformator? _coordinateTransformator;
+
+        [Fact, Trait("Category", "GDAL_Proj_Transformation")]
         public void TransformationTest()
         {
             const int sourceEpsgCode = 5972;
             const int targetEpsgCode = 4326;
 
-            var sourceCoordinate = new[] { 299416.02, 6695529.56, 0};
+            var sourceCoordinate = new List<double>{299416.02, 6695529.56, 0};
 
             var transformedCoordinate = new CoordinateTransformator(sourceEpsgCode, targetEpsgCode).Transform(sourceCoordinate);
 
-            Assert.Equal(new[] { 5.36455553, 60.34645969 }, new[] { transformedCoordinate.x, transformedCoordinate.y });
+            var coordinate = transformedCoordinate.First();
+            Assert.Equal(60.34645969, coordinate.X, 8);
+            Assert.Equal(5.36455553, coordinate.Y, 8);
+            Assert.Equal(0, coordinate.Z);
         }
 
-        [Fact]
+        [Fact, Trait("Integration", "GML data extraction")]
         public void Load3dGmlStuff()
         {
             var filePath = "C:\\Users\\LeifHalvorSunde\\FTP\\3d-plankart\\nattlandsfjellet_3d.gml";
 
             var xDoc = LoadXDocument(filePath).Result;
 
+            var sourceEpsgCode = int.Parse(GetEpsg(xDoc).Code.Remove(0, 5));
+
+            _coordinateTransformator = new CoordinateTransformator(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode);
+
             var rpSpatialElements = GetRpSpatialElements(xDoc);
 
+            var czml = "";
+
+            foreach ((var rpSpatialElementName, var cesiumGraphicCollections)  in rpSpatialElements)
+            {
+                foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
+                {
+                    czml = cesiumGraphicCollection.CzmlRepresentation;
+                }
+            }
+
             Assert.True(rpSpatialElements.ContainsKey(RpSpatialElement.RpBestemmelseRegTerreng.ToString()));
+            Assert.True(czml != null && czml.Contains("id"));
         }
 
         private static async Task<XDocument> LoadXDocument(string filePath)
@@ -75,33 +97,43 @@ namespace DiBK.Plankart.Application.Tests.Services
         {
             return spatialElements.Select(spatialElement =>
             {
-                Enum noko = null;
+                Enum? surfaceType = null;
                 if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
-                    noko = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
+                    surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
 
                 return new CesiumGraphicCollection
                 {
                     Id = spatialElement.GetElement("//*:lokalId").Value,
-                    Type = noko,
-                    CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"))
+                    Type = surfaceType,
+                    CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"), surfaceType)
                 };
             });
         }
 
-        private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists)
+        private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum? surfaceType)
         {
             var cesiumGraphics = new List<CesiumGraphic>();
 
             foreach (var positionList in positionLists)
             {
-                cesiumGraphics.Add(
-                    new PolygonGraphic(positionList.Value.Split(' ')
-                        .Select(p => double.Parse(p, NumberFormatInfo.InvariantInfo))
-                        .ToArray()
-                    ));
+                var sourceCoordinates = positionList.Value.Split(' ')
+                    .Select(v => double.Parse(v, NumberFormatInfo.InvariantInfo)).ToList();
+                var transformedCoordinates = _coordinateTransformator.Transform(sourceCoordinates);
+
+                cesiumGraphics.Add(new PolygonGraphic(transformedCoordinates, surfaceType));
             }
 
             return cesiumGraphics;
+        }
+
+        private static Epsg GetEpsg(XDocument document)
+        {
+            var srsName = document.XPath2SelectOne<XAttribute>("(//*[@srsName]/@srsName)[1]")?.Value;
+
+            if (srsName == null)
+                return null;
+
+            return Epsg.Create(srsName);
         }
 
 
