@@ -28,8 +28,8 @@ namespace DiBK.Plankart.Application.Services
 
             if (!validationResult.XsdValidated || !validationResult.EpsgValidated)
             {
-                return new MapDocument 
-                { 
+                return new OlMapDocument
+                {
                     FileName = file.FileName,
                     FileSize = file.Length,
                     ValidationResult = validationResult 
@@ -41,7 +41,7 @@ namespace DiBK.Plankart.Application.Services
             if (document == null)
                 return null;
 
-            return new MapDocument
+            return new OlMapDocument
             {
                 Id = GetId(document),
                 Name = GetName(document),
