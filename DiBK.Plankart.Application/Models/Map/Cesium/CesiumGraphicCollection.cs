@@ -15,12 +15,12 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         private string GetCzmlRepresentation()
         {
             return
-                "[" +
-                    "{" +
-                        "id: 'document'," +
-                        $"name: '{Id}'," +
-                        "version: '1.0'" +
-                    "}," +
+                "[\n" +
+                    "\t{\n" +
+                        "\t\tid: 'document',\n" +
+                        $"\t\tname: '{Id}',\n" +
+                        "\t\tversion: '1.0'\n" +
+                    "\t},\n" +
                     CesiumGraphics.Aggregate("", (s, graphic) => s + graphic.CzmlRepresentation) +
                 "]";
         }

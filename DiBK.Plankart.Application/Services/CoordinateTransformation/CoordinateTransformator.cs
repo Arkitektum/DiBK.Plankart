@@ -54,7 +54,7 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
 
             for (var i = 0; i < nPoints; i++)
             {
-                result.Add(new Coordinate { X = xProj[i], Y = yProj[i], Z = zProj[i] });
+                result.Add(new Coordinate { X = yProj[i], Y = xProj[i], Z = zProj[i] + 55 });
             }
             return result;
         }

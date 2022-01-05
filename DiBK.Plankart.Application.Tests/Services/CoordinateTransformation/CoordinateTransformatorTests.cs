@@ -49,18 +49,16 @@ namespace DiBK.Plankart.Application.Tests.Services
 
             var rpSpatialElements = GetRpSpatialElements(xDoc);
 
-            var czml = "";
+            var czmls = new List<string>();
 
             foreach ((var rpSpatialElementName, var cesiumGraphicCollections)  in rpSpatialElements)
             {
-                foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
-                {
-                    czml = cesiumGraphicCollection.CzmlRepresentation;
-                }
+                czmls.AddRange(cesiumGraphicCollections.Select(cesiumGraphicCollection =>
+                    cesiumGraphicCollection.CzmlRepresentation));
             }
 
             Assert.True(rpSpatialElements.ContainsKey(RpSpatialElement.RpBestemmelseRegTerreng.ToString()));
-            Assert.True(czml != null && czml.Contains("id"));
+            Assert.True(czmls.Any());
         }
 
         private static async Task<XDocument> LoadXDocument(string filePath)
@@ -95,19 +93,23 @@ namespace DiBK.Plankart.Application.Tests.Services
 
         private IEnumerable<CesiumGraphicCollection> CreateCesiumGraphicsCollection(IEnumerable<XElement> spatialElements)
         {
-            return spatialElements.Select(spatialElement =>
+            var cesiumGraphicsCollection = new List<CesiumGraphicCollection>();
+
+            foreach (var spatialElement in spatialElements)
             {
                 Enum? surfaceType = null;
                 if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
                     surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
 
-                return new CesiumGraphicCollection
+                cesiumGraphicsCollection.Add(new CesiumGraphicCollection
                 {
                     Id = spatialElement.GetElement("//*:lokalId").Value,
                     Type = surfaceType,
                     CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"), surfaceType)
-                };
-            });
+                });
+            }
+
+            return cesiumGraphicsCollection;
         }
 
         private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum? surfaceType)
@@ -118,7 +120,8 @@ namespace DiBK.Plankart.Application.Tests.Services
             {
                 var sourceCoordinates = positionList.Value.Split(' ')
                     .Select(v => double.Parse(v, NumberFormatInfo.InvariantInfo)).ToList();
-                var transformedCoordinates = _coordinateTransformator.Transform(sourceCoordinates);
+
+                var transformedCoordinates = _coordinateTransformator?.Transform(sourceCoordinates);
 
                 cesiumGraphics.Add(new PolygonGraphic(transformedCoordinates, surfaceType));
             }
