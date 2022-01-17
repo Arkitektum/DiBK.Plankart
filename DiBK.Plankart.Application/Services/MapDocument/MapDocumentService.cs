@@ -13,13 +13,16 @@ namespace DiBK.Plankart.Application.Services
     {
         private readonly IValidationService _validationService;
         private readonly IGmlToGeoJsonService _gmlToGeoJsonService;
+        private readonly IGmlToCzmlService _gmlToCzmlService;
 
         public MapDocumentService(
             IValidationService validationService,
-            IGmlToGeoJsonService gmlToGeoJsonService)
+            IGmlToGeoJsonService gmlToGeoJsonService,
+            IGmlToCzmlService gmlToCzmlService)
         {
             _validationService = validationService;
             _gmlToGeoJsonService = gmlToGeoJsonService;
+            _gmlToCzmlService = gmlToCzmlService;
         }
 
         public async Task<MapDocument> CreateMapDocument(IFormFile file)
@@ -28,7 +31,7 @@ namespace DiBK.Plankart.Application.Services
 
             if (!validationResult.XsdValidated || !validationResult.EpsgValidated)
             {
-                return new OlMapDocument
+                return new MapDocument
                 {
                     FileName = file.FileName,
                     FileSize = file.Length,
@@ -41,17 +44,20 @@ namespace DiBK.Plankart.Application.Services
             if (document == null)
                 return null;
 
-            return new OlMapDocument
+            var epsg = GetEpsg(document);
+
+            return new MapDocument
             {
                 Id = GetId(document),
                 Name = GetName(document),
                 Title = GetTitle(document),
-                Epsg = GetEpsg(document),
+                Epsg = epsg,
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
                 FileSize = file.Length,
                 GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(document, new() { { "RpPåskrift", "tekstplassering" } }),
-                ValidationResult = validationResult
+                ValidationResult = validationResult,
+                CzmlData = _gmlToCzmlService.CreateCzmlCollection(document, epsg.Code, null)
             };
         }
 
@@ -78,6 +84,7 @@ namespace DiBK.Plankart.Application.Services
 
             return type switch
             {
+                "31" => "Mindre reguleringsendring for",
                 "34" => "Områderegulering for",
                 "35" => "Detaljregulering for",
                 _ => null

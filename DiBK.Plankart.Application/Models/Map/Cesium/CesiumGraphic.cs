@@ -41,22 +41,22 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         {
             return
                 "{" +
-                    $"id: '{_id}'," +
-                    $"name: '{_name}'," +
-                    "polygon: {" +
-                        "positions: {" +
-                            "cartographicDegrees: [" +
-                                Coordinates.Aggregate("", (s, c) => s + $"{c},") +
+                    $"\"id\": \"{_id}\"," +
+                    $"\"name\": \"{_name}\"," +
+                    "\"polygon\": {" +
+                        "\"positions\": {" +
+                            "\"cartographicDegrees\": [" +
+                                Coordinates.Aggregate("", (s, c) => s + $"{c},").TrimEnd(',') +
                             "]" +
                         "}," +
-                        "material: {" +
-                            "solidColor: {" +
-                                "color: {" +
-                                    $"rgba: [{SetColor()}]" +
+                        "\"material\": {" +
+                            "\"solidColor\": {" +
+                                "\"color\": {" +
+                                    $"\"rgba\": [{SetColor()}]" +
                                 "}" +
                             "}" +
                         "}," +
-                        "perPositionHeight: true," +
+                        "\"perPositionHeight\": true" +
                     "}" +
                 "},";
         }
@@ -66,10 +66,22 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
             string rgb;
             string alpha;
 
+            if (_type is GmlToCzmlService.RpSpatialElement rpSpatialElementType)
+            {
+                return rpSpatialElementType switch
+                {
+                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => "200,100,0,170",
+                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => "255,255,51,170",
+                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRom => "0,0,0,0",
+                    GmlToCzmlService.RpSpatialElement.RpHensynRom => "255,255,255,50", //Hensynrom må bruke tegneregel fra hensynområdet det gjelder for
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+
             if (_type is GmlToCzmlService.RegTerrengOverflateType type)
             {
                 rgb = "200,100,0";
-                alpha = type switch
+                alpha = "," + type switch
                 {
                     GmlToCzmlService.RegTerrengOverflateType.høyeste
                         or GmlToCzmlService.RegTerrengOverflateType.laveste => "150",
@@ -79,11 +91,11 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
             }
             else
             {
-                rgb = "255,255,51";
-                alpha = "170";
+                rgb = "255,204,0";
+                alpha = ",170";
             }
 
-            return $"{rgb},{alpha}";
+            return $"{rgb}{alpha}";
         }
     }
 }

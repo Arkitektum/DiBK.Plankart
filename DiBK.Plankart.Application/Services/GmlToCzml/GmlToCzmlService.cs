@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using DiBK.Plankart.Application.Extensions;
@@ -11,31 +12,29 @@ namespace DiBK.Plankart.Application.Services
 {
     public class GmlToCzmlService : IGmlToCzmlService
     {
-        private CesiumMapDocument _mapDocument = new();
-        private int _sourceEpsgCode;
+        private CoordinateTransformer _coordinateTransformer;
 
-        public CesiumDataCollection CreateCzmlObject(XDocument document, string epsgCode, Dictionary<string, string> geoElementMappings)
+        public CzmlDataCollection CreateCzmlCollection(XDocument document, string epsgCode, Dictionary<string, string> geoElementMappings)
         {
             if (document == null)
                 return null;
 
-            _sourceEpsgCode = int.Parse(epsgCode.Remove(0, 5));
+            var sourceEpsgCode = int.Parse(epsgCode.Remove(0, 5));
+
+            _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode);
 
             var rpSpatialElements = GetRpSpatialElements(document);
-            var cesiumDataCollection = new CesiumDataCollection();
+            var czmlDataCollection = new CzmlDataCollection();
 
-            foreach ((var rpSpatialElementName, var cesiumGraphicCollections) in rpSpatialElements)
+            foreach (var (rpSpatialElementName, cesiumGraphicCollections) in rpSpatialElements)
             {
                 foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
                 {
-                    foreach (var graphic in cesiumGraphicCollection.CesiumGraphics)
-                    {
-                        
-                    }
+                    czmlDataCollection.CzmlStrings.Add(cesiumGraphicCollection.CzmlRepresentation);
                 }
             }
 
-            return cesiumDataCollection;
+            return czmlDataCollection;
         }
 
         private Dictionary<string, IEnumerable<CesiumGraphicCollection>> GetRpSpatialElements(XDocument xDoc)
@@ -56,30 +55,38 @@ namespace DiBK.Plankart.Application.Services
 
         private IEnumerable<CesiumGraphicCollection> CreateCesiumGraphicsCollection(IEnumerable<XElement> spatialElements)
         {
-            return spatialElements.Select(spatialElement =>
-            {
-                Enum surfaceType = null;
-                if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
-                    surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflatetype"));
+            var cesiumGraphicsCollection = new List<CesiumGraphicCollection>();
 
-                return new CesiumGraphicCollection
+            foreach (var spatialElement in spatialElements)
+            {
+                Enum? surfaceType = null;
+
+                if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
+                    surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
+
+                surfaceType ??= Enum.Parse<RpSpatialElement>(spatialElement.Name.LocalName);
+
+                cesiumGraphicsCollection.Add(new CesiumGraphicCollection
                 {
                     Id = spatialElement.GetElement("//*:lokalId").Value,
                     Type = surfaceType,
                     CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"), surfaceType)
-                };
-            });
+                });
+            }
+
+            return cesiumGraphicsCollection;
         }
 
-        private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum surfaceType)
+        private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum? surfaceType)
         {
             var cesiumGraphics = new List<CesiumGraphic>();
 
             foreach (var positionList in positionLists)
             {
-                var sourceCoordinates = positionList.Value.Split(' ').Select(double.Parse).ToList();
+                var sourceCoordinates = positionList.Value.Split(' ')
+                    .Select(v => double.Parse(v, NumberFormatInfo.InvariantInfo)).ToList();
 
-                var transformedCoordinates = new CoordinateTransformator(_sourceEpsgCode, Epsg.CesiumCoordinateSystemCode).Transform(sourceCoordinates);
+                var transformedCoordinates = _coordinateTransformer?.Transform(sourceCoordinates);
 
                 cesiumGraphics.Add(new PolygonGraphic(transformedCoordinates, surfaceType));
             }
@@ -87,32 +94,7 @@ namespace DiBK.Plankart.Application.Services
             return cesiumGraphics;
         }
 
-        private string ConvertPositionListToApiFriendlyString(string positionList)
-        {
-            var apiFriendlyString = "";
-            long whitespaceCounter = 0;
-
-            foreach (var character in positionList)
-            {
-                if (character == ' ')
-                {
-                    whitespaceCounter++;
-                    if (whitespaceCounter % 3 == 0)
-                        apiFriendlyString += ';';
-                    else
-                        apiFriendlyString += ',';
-                }
-                else
-                    apiFriendlyString += character;
-            }
-
-            if (whitespaceCounter % 3 != 0)
-                throw new ArgumentOutOfRangeException("positionList", "Length of coordinate array must be dividable by 3");
-
-            return apiFriendlyString;
-        }
-
-        private enum RpSpatialElement
+        public enum RpSpatialElement
         {
             RpHandlingRom,
             RpBestemmelseRom,

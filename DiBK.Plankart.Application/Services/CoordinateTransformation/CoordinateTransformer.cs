@@ -9,11 +9,11 @@ using OSGeo.OSR;
 [assembly: InternalsVisibleTo("DiBK.Plankart.Application.Tests")]
 namespace DiBK.Plankart.Application.Services.CoordinateTransformation
 {
-    internal class CoordinateTransformator
+    internal class CoordinateTransformer
     {
         private readonly OSGeo.OSR.CoordinateTransformation _coordinateTransformation;
 
-        public CoordinateTransformator(int sourceEpsgCode, int targetEpsgCode)
+        public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode)
         {
             GdalBase.ConfigureAll();
 
@@ -28,15 +28,15 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
                 throw new ArgumentException("Invalid EPSG code(s) or unsupported transformation");
         }
 
-        public Coordinate Transform(double x, double y, double z=0)
+        public Coordinate Transform(double x, double y, double z=0, bool transformHeight = false)
         {
             var projected = new double[3];
             _coordinateTransformation.TransformPoint(projected, x, y, z);
 
-            return new Coordinate { X = projected[0], Y = projected[1], Z = projected[2] };
+            return new Coordinate { X = projected[0], Y = projected[1], Z = transformHeight ? projected[2] : z };
         }
 
-        public IEnumerable<Coordinate> Transform(List<double> xyz)
+        public IEnumerable<Coordinate> Transform(List<double> xyz, bool transformHeight=false)
         {
             var length = xyz.Count;
             if (length % 3 != 0)
@@ -52,9 +52,11 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
 
             var result = new List<Coordinate>();
 
+            //var zOut = transformHeight ? new List<double>(zProj) : new List<double>(z);
+
             for (var i = 0; i < nPoints; i++)
             {
-                result.Add(new Coordinate { X = yProj[i], Y = xProj[i], Z = zProj[i] + 50 });
+                result.Add(new Coordinate { X = yProj[i], Y = xProj[i], Z = zProj[i] });
             }
             return result;
         }
