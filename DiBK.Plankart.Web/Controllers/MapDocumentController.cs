@@ -19,19 +19,24 @@ namespace DiBK.Plankart.Controllers
         };
 
         private readonly IMapDocumentService _mapDocumentService;
+        private readonly IMultipartRequestService _multipartRequestService;
 
         public MapDocumentController(
             IMapDocumentService mapDocumentService,
+            IMultipartRequestService multipartRequestService,
             ILogger<MapDocumentController> logger) : base(logger)
         {
             _mapDocumentService = mapDocumentService;
+            _multipartRequestService = multipartRequestService;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateMapDocument(IFormFile file)
+        public async Task<IActionResult> CreateMapDocument()
         {
             try
             {
+                var file = await _multipartRequestService.GetFileFromMultipart();
+
                 if (file == null)
                     return BadRequest();
 

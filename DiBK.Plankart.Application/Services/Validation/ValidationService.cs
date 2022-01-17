@@ -1,5 +1,6 @@
 ﻿using DiBK.Plankart.Application.Exceptions;
 using DiBK.Plankart.Application.Models.Validation;
+using DiBK.Plankart.Application.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -13,16 +14,16 @@ namespace DiBK.Plankart.Application.Services
 {
     public class ValidationService : IValidationService
     {
+        private readonly HttpClient _httpClient;
         private readonly ValidationSettings _settings;
         private readonly ILogger<ValidationService> _logger;
-        public HttpClient Client { get; }
 
         public ValidationService(
-            HttpClient client,
+            HttpClient httpClient,
             IOptions<ValidationSettings> options,
             ILogger<ValidationService> logger)
         {
-            Client = client;
+            _httpClient = httpClient;
             _settings = options.Value;
             _logger = logger;
         }
@@ -40,7 +41,9 @@ namespace DiBK.Plankart.Application.Services
                 return result;
             }
 
-            var epsgRule = failedRules.SingleOrDefault(rule => rule.Id == _settings.EpsgRuleId);
+            var dimensions = await GmlHelper.GetDimensionsAsync(file.OpenReadStream());
+            var epsgRuleId = dimensions == 2 ? _settings.Epsg2dRuleId : _settings.Epsg3dRuleId;
+            var epsgRule = failedRules.SingleOrDefault(rule => rule.Id == epsgRuleId);
 
             if (epsgRule != null)
             {
@@ -69,7 +72,7 @@ namespace DiBK.Plankart.Application.Services
 
                 request.Headers.Add("system", "GML-kart - Fellestjenester PLAN");
 
-                using var response = await Client.SendAsync(request);
+                using var response = await _httpClient.SendAsync(request);
                 response.EnsureSuccessStatusCode();
 
                 var responseString = await response.Content.ReadAsStringAsync();

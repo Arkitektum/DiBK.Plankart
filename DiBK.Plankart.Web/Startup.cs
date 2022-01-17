@@ -2,6 +2,7 @@ using DiBK.Plankart.Application.Models.Validation;
 using DiBK.Plankart.Application.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,9 +30,12 @@ namespace DiBK.Plankart
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
             });
 
+            services.AddHttpContextAccessor();
+
             services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
             services.AddTransient<IGmlToCzmlService, GmlToCzmlService>();
             services.AddTransient<IMapDocumentService, MapDocumentService>();
+            services.AddTransient<IMultipartRequestService, MultipartRequestService>();
             services.AddHttpClient<IValidationService, ValidationService>();
 
             services.Configure<ValidationSettings>(Configuration.GetSection(ValidationSettings.SectionName));
@@ -53,6 +57,11 @@ namespace DiBK.Plankart
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
             );
+
+            app.Use(async (context, next) => {
+                context.Request.EnableBuffering();
+                await next();
+            });
 
             app.UseSwagger();
 
