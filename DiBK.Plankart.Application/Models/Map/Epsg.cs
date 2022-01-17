@@ -15,13 +15,24 @@ namespace DiBK.Plankart.Application.Models.Map
             { "25835", "UTM sone 35 (EUREF89/WGS84)" }
         };
 
+        private static readonly Dictionary<string, string> _2dCoordinateSystemCodeMappedBy3dCode = new()
+        {
+            { "EPSG:5972", "EPSG:25832" },
+            { "EPSG:5973", "EPSG:25833" },
+            { "EPSG:5975", "EPSG:25835" },
+        };
+
         public string Code { get; set; }
         public string Description { get; set; }
+        public string Code2D { get; }
 
         private Epsg(string code, string description)
         {
             Code = code;
             Description = description;
+            Code2D = _2dCoordinateSystemCodeMappedBy3dCode.ContainsKey(code)
+                ? _2dCoordinateSystemCodeMappedBy3dCode[code]
+                : code;
         }
 
         public static Epsg Create(string srsName)
