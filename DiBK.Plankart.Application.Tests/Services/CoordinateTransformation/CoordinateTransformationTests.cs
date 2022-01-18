@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using DiBK.Plankart.Application.Exceptions;
-using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
-using DiBK.Plankart.Application.Models.Map.Cesium;
 using DiBK.Plankart.Application.Services;
 using DiBK.Plankart.Application.Services.CoordinateTransformation;
 using Wmhelp.XPath2;
@@ -19,8 +16,6 @@ namespace DiBK.Plankart.Application.Tests.Services
 {
     public class CoordinateTransformationTests
     {
-        private CoordinateTransformer? _coordinateTransformator;
-
         [Fact, Trait("Category", "GDAL_Proj_Transformation")]
         public void TransformationTest()
         {
@@ -31,11 +26,11 @@ namespace DiBK.Plankart.Application.Tests.Services
             var sourceCoordinate = new List<double>{299416.02, 6695529.56, 138};
             var sourceCoordinate2 = new List<double>{299439.62, 6695534.72, 149.66};
 
-            var coordinateTransformator = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode);
+            var coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode);
 
-            var transformedCoordinate = coordinateTransformator.Transform(sourceCoordinate);
-            var transformedCoordinateAndHeight = coordinateTransformator.Transform(sourceCoordinate, true);
-            var transformedCoordinate2 = coordinateTransformator.Transform(sourceCoordinate2);
+            var transformedCoordinate = coordinateTransformer.Transform(sourceCoordinate);
+            var transformedCoordinateAndHeight = coordinateTransformer.Transform(sourceCoordinate, true);
+            var transformedCoordinate2 = coordinateTransformer.Transform(sourceCoordinate2);
 
             var coordinate = transformedCoordinate.First();
             var coordinateAndHeight = transformedCoordinateAndHeight.First();
