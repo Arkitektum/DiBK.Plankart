@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace DiBK.Plankart.Application.Models.Map
 {
@@ -16,6 +17,11 @@ namespace DiBK.Plankart.Application.Models.Map
         public override string ToString()
         {
             return $"{X.ToString(_nfi)}, {Y.ToString(_nfi)}, {Z.ToString(_nfi)}";
+        }
+
+        public IEnumerable<double> ToEnumerable()
+        {
+            return new List<double> { X, Y, Z };
         }
     }
 }

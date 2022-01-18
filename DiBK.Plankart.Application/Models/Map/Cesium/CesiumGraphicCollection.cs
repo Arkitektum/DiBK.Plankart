@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace DiBK.Plankart.Application.Models.Map.Cesium
 {
@@ -11,19 +11,27 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         public Enum Type { get; set; }
         public List<CesiumGraphic> CesiumGraphics { get; set; }
 
-        public string CzmlRepresentation => GetCzmlRepresentation();
+        public JArray CzmlRepresentation => GetCzmlRepresentation();
 
-        private string GetCzmlRepresentation()
+        private JArray GetCzmlRepresentation()
         {
-            return
-                "[\n" +
-                    "{" +
-                        "\"id\": \"document\"," +
-                        $"\"name\": \"{Name}_{Id}\"," +
-                        "\"version\": \"1.0\"" +
-                    "}," +
-                    CesiumGraphics.Aggregate("", (s, graphic) => s + graphic.CzmlRepresentation).TrimEnd(',') +
-                "\n];";
+            var jsonArray = new JArray();
+
+            var czmlDocObject = new JObject
+            {
+                new JProperty("id", "document"),
+                new JProperty("name", $"{Name}_{Id}"),
+                new JProperty("version", "1.0")
+            };
+
+            jsonArray.Add(czmlDocObject);
+
+            foreach (var cesiumGraphic in CesiumGraphics)
+            {
+                jsonArray.Add(cesiumGraphic.CzmlRepresentation);
+            }
+
+            return jsonArray;
         }
     }
 }

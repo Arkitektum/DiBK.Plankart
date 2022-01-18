@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using DiBK.Plankart.Application.Services;
+using Newtonsoft.Json.Linq;
 
 namespace DiBK.Plankart.Application.Models.Map.Cesium
 {
     public abstract class CesiumGraphic
     {
-        protected abstract string CreateCzmlRepresentation();
-        public string CzmlRepresentation => CreateCzmlRepresentation();
+        protected abstract JObject CreateCzmlRepresentation();
+        public JObject CzmlRepresentation => CreateCzmlRepresentation();
         internal IEnumerable<Coordinate> Coordinates { get; init; }
 
     }
@@ -37,65 +38,63 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
             Coordinates = coordinates;
         }
 
-        protected override string CreateCzmlRepresentation()
+        protected override JObject CreateCzmlRepresentation()
         {
-            return
-                "{" +
-                    $"\"id\": \"{_id}\"," +
-                    $"\"name\": \"{_name}\"," +
-                    "\"polygon\": {" +
-                        "\"positions\": {" +
-                            "\"cartographicDegrees\": [" +
-                                Coordinates.Aggregate("", (s, c) => s + $"{c},").TrimEnd(',') +
-                            "]" +
-                        "}," +
-                        "\"material\": {" +
-                            "\"solidColor\": {" +
-                                "\"color\": {" +
-                                    $"\"rgba\": [{SetColor()}]" +
-                                "}" +
-                            "}" +
-                        "}," +
-                        "\"perPositionHeight\": true" +
-                    "}" +
-                "},";
+            var result = Coordinates.Aggregate(new List<double>(),
+                (current, coordinate) => current.Concat(new List<double>(coordinate.ToEnumerable())).ToList());
+
+            var polygonCzml = new JObject
+            {
+                new JProperty("id", _id),
+                new JProperty("name", _name),
+                { "polygon", new JObject
+                    {
+                        { "positions", new JObject { new JProperty("cartographicDegrees", result) } },
+                        { "material", new JObject
+                            {{
+                                "solidColor", new JObject
+                                {{
+                                    "color", new JObject
+                                    {
+                                        new JProperty("rgba", SetColor())
+                                    }
+                                }}
+                            }}
+                        },
+                        new JProperty("perPositionHeight", true)
+                    }
+                }
+            };
+
+            return polygonCzml;
         }
 
-        private string SetColor()
+        private int[] SetColor()
         {
-            string rgb;
-            string alpha;
-
             if (_type is GmlToCzmlService.RpSpatialElement rpSpatialElementType)
             {
                 return rpSpatialElementType switch
                 {
-                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => "200,100,0,170",
-                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => "255,255,51,170",
-                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRom => "0,0,0,0",
-                    GmlToCzmlService.RpSpatialElement.RpHensynRom => "255,255,255,50", //Hensynrom må bruke tegneregel fra hensynområdet det gjelder for
+                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => new [] {200,100,0,170},
+                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => new[] {255,255,51,170},
+                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRom => new[] {0,0,0,0},
+                    GmlToCzmlService.RpSpatialElement.RpHensynRom => new[] { 255,255,255,50}, //Hensynrom må bruke tegneregel fra hensynområdet det gjelder for
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
 
             if (_type is GmlToCzmlService.RegTerrengOverflateType type)
             {
-                rgb = "200,100,0";
-                alpha = "," + type switch
+                return type switch
                 {
                     GmlToCzmlService.RegTerrengOverflateType.høyeste
-                        or GmlToCzmlService.RegTerrengOverflateType.laveste => "150",
-                    GmlToCzmlService.RegTerrengOverflateType.planlagt => "200",
-                    _ => "255"
+                        or GmlToCzmlService.RegTerrengOverflateType.laveste => new[] {200,100,0,150},
+                    GmlToCzmlService.RegTerrengOverflateType.planlagt => new[] {200,100,0,200},
+                    _ => new[] {200,100,0,255}
                 };
             }
-            else
-            {
-                rgb = "255,204,0";
-                alpha = ",170";
-            }
-
-            return $"{rgb}{alpha}";
+            
+            return new[] { 255,204,0,170};
         }
     }
 }
