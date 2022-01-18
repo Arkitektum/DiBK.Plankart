@@ -26,7 +26,7 @@ namespace DiBK.Plankart.Application.Services
             var rpSpatialElements = GetRpSpatialElements(document);
             var czmlDataCollection = new CzmlDataCollection();
 
-            foreach (var (rpSpatialElementName, cesiumGraphicCollections) in rpSpatialElements)
+            foreach (var (_, cesiumGraphicCollections) in rpSpatialElements)
             {
                 foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
                 {

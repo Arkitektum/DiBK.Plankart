@@ -5,7 +5,7 @@ namespace DiBK.Plankart.Application.Models.Map
 {
     internal class Coordinate
     {
-        private NumberFormatInfo _nfi = new NumberFormatInfo
+        private readonly NumberFormatInfo _nfi = new()
         {
             NumberDecimalSeparator = "."
         };
