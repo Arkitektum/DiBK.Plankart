@@ -55,9 +55,9 @@ namespace DiBK.Plankart.Application.Services
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
                 FileSize = file.Length,
-                GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(document, new() { { "RpPåskrift", "tekstplassering" } }),
+                GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(new XDocument(document), new() { { "RpPåskrift", "tekstplassering" } }),
                 ValidationResult = validationResult,
-                CzmlData = _gmlToCzmlService.CreateCzmlCollection(document, epsg.Code, null)
+                CzmlData = _gmlToCzmlService.CreateCzmlCollection(document, epsg.Code, null),
             };
         }
 
