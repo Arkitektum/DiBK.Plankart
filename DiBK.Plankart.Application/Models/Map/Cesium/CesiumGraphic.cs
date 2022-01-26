@@ -11,7 +11,6 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
         protected abstract JObject CreateCzmlRepresentation();
         public JObject CzmlRepresentation => CreateCzmlRepresentation();
         internal IEnumerable<Coordinate> Coordinates { get; init; }
-
     }
 
     // https://cesium.com/learn/cesiumjs/ref-doc/PolygonGraphics.html
@@ -61,7 +60,8 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
                                 }}
                             }}
                         },
-                        new JProperty("perPositionHeight", true)
+                        new JProperty("perPositionHeight", true),
+                        //new JProperty("outline", true)
                     }
                 }
             };
@@ -71,14 +71,15 @@ namespace DiBK.Plankart.Application.Models.Map.Cesium
 
         private int[] SetColor()
         {
+            // todo: Bruk tegneregel som gjelder for området som er linket til rommet
             if (_type is GmlToCzmlService.RpSpatialElement rpSpatialElementType)
             {
                 return rpSpatialElementType switch
                 {
-                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => new [] {200,100,0,170},
-                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => new[] {255,255,51,170},
+                    GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => new [] {200,100,0,75},
+                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => new[] {255,255,51,75},
                     GmlToCzmlService.RpSpatialElement.RpBestemmelseRom => new[] {0,0,0,0},
-                    GmlToCzmlService.RpSpatialElement.RpHensynRom => new[] { 255,255,255,50}, //Hensynrom må bruke tegneregel fra hensynområdet det gjelder for
+                    GmlToCzmlService.RpSpatialElement.RpHensynRom => new[] { 255,255,255,75},
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
