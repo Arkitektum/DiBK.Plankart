@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,8 +20,7 @@ namespace DiBK.Plankart.Application.Tests.Services
         public void TransformationTest()
         {
             const int sourceEpsgCode = 5972;
-            //const int targetEpsgCode = 4326;
-            const int targetEpsgCode = 4979;
+            const int targetEpsgCode = Epsg.CesiumCoordinateSystemCode2D;
 
             var sourceCoordinate = new List<double>{299416.02, 6695529.56, 138};
             var sourceCoordinate2 = new List<double>{299439.62, 6695534.72, 149.66};
