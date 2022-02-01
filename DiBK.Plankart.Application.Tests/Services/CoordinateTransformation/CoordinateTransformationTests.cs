@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,11 +25,11 @@ namespace DiBK.Plankart.Application.Tests.Services
             var sourceCoordinate = new List<double>{299416.02, 6695529.56, 138};
             var sourceCoordinate2 = new List<double>{299439.62, 6695534.72, 149.66};
 
-            var coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode);
+            var coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode, sourceCoordinate2);
 
             var transformedCoordinate = coordinateTransformer.Transform(sourceCoordinate);
             var transformedCoordinateAndHeight = coordinateTransformer.Transform(sourceCoordinate, true);
-            var transformedCoordinate2 = coordinateTransformer.Transform(sourceCoordinate2);
+            var transformedCoordinate2 = coordinateTransformer.Transform(sourceCoordinate2, true);
 
             var coordinate = transformedCoordinate.First();
             var coordinateAndHeight = transformedCoordinateAndHeight.First();
@@ -41,11 +41,11 @@ namespace DiBK.Plankart.Application.Tests.Services
 
             Assert.Equal(5.36455553, coordinateAndHeight.X, 8);
             Assert.Equal(60.34645969, coordinateAndHeight.Y, 8);
-            Assert.Equal(188, coordinateAndHeight.Z);
+            Assert.Equal(182.99303010, coordinateAndHeight.Z, 8);
 
             Assert.Equal(5.364977108609242, coordinate2.X);
             Assert.Equal(60.34651760036854, coordinate2.Y);
-            Assert.Equal(199.66, coordinate2.Z);
+            Assert.Equal(194.65303010311578, coordinate2.Z);
         }
 
         [Fact, Trait("Integration", "GML data extraction")]

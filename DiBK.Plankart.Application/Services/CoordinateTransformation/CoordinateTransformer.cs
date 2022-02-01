@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using DiBK.Plankart.Application.Models.Map;
 using MaxRev.Gdal.Core;
 using OSGeo.OSR;
@@ -12,8 +16,9 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
     internal class CoordinateTransformer
     {
         private readonly OSGeo.OSR.CoordinateTransformation _coordinateTransformation;
+        private readonly double _heightOffset;
 
-        public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode)
+        public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode, IReadOnlyList<double> heightOffsetReferencePoint=null)
         {
             GdalBase.ConfigureAll();
 
@@ -26,6 +31,9 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
             _coordinateTransformation = new OSGeo.OSR.CoordinateTransformation(sourceCoordinateSystem, targetCoordinateSystem);
             if (_coordinateTransformation == null)
                 throw new ArgumentException("Invalid EPSG code(s) or unsupported transformation");
+
+            if (heightOffsetReferencePoint != null)
+                _heightOffset = GetHeightOffset(heightOffsetReferencePoint, sourceEpsgCode, targetEpsgCode).Result;
         }
 
         public Coordinate Transform(double x, double y, double z=0, bool transformHeight = false)
@@ -33,7 +41,7 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
             var projected = new double[3];
             _coordinateTransformation.TransformPoint(projected, x, y, z);
 
-            return new Coordinate { X = projected[0], Y = projected[1], Z = transformHeight ? projected[2] : z };
+            return new Coordinate { X = projected[0], Y = projected[1], Z = z + (transformHeight ? _heightOffset : 0) };
         }
 
         public IEnumerable<Coordinate> Transform(List<double> xyz, bool transformHeight=false)
@@ -52,11 +60,9 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
 
             var result = new List<Coordinate>();
 
-            //var zOut = transformHeight ? new List<double>(zProj) : new List<double>(z);
-
             for (var i = 0; i < nPoints; i++)
             {
-                result.Add(new Coordinate { X = yProj[i], Y = xProj[i], Z = zProj[i] });
+                result.Add(new Coordinate { X = yProj[i], Y = xProj[i], Z = zProj[i] + (transformHeight ? _heightOffset : 0) });
             }
             return result;
         }
@@ -88,6 +94,22 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
             }
 
             return (x, y, z);
+        }
+
+        private static async Task<double> GetHeightOffset(IReadOnlyList<double> referencePoint, int fromEpsg, int toEpsg)
+        {
+            var x = referencePoint[0];
+            var y = referencePoint[1];
+            var h = referencePoint[2];
+
+            var nfi = new NumberFormatInfo { NumberDecimalSeparator = "." };
+
+            var getUri = new Uri($"https://ws.geonorge.no/transformering/v1/transformer?x={x.ToString(nfi)}&y={y.ToString(nfi)}&z={h.ToString(nfi)}&fra={fromEpsg}&til={toEpsg}");
+
+            using var client = new HttpClient();
+            var coordinate = await client.GetFromJsonAsync<Coordinate>(getUri);
+
+            return coordinate?.Z - h ?? 0;
         }
     }
 }
