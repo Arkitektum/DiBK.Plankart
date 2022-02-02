@@ -1,4 +1,4 @@
-﻿using DiBK.Plankart.Application.Extensions;
+using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -101,9 +101,7 @@ namespace DiBK.Plankart.Application.Services
 
         private static GeoJsonGeometry GetGeometry(Geometry geometry)
         {
-            var json = geometry.ExportToJson(Array.Empty<string>());
-
-            if (json == null)
+            if (!TryExportToJson(geometry, out var json))
                 return null;
 
             var jObject = JObject.Parse(json);
@@ -141,6 +139,20 @@ namespace DiBK.Plankart.Application.Services
             }
 
             return null;
+        }
+
+        private static bool TryExportToJson(Geometry geometry, out string json)
+        {
+            try
+            {
+                json = geometry.ExportToJson(Array.Empty<string>());
+                return json != null;
+            }
+            catch
+            {
+                json = null;
+                return false;
+            }
         }
 
         private static JObject CreateProperties(XElement featureMember, string featureName, string gmlId)
