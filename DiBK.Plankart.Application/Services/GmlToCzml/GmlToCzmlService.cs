@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -21,7 +21,10 @@ namespace DiBK.Plankart.Application.Services
 
             var sourceEpsgCode = int.Parse(epsgCode.Remove(0, 5));
 
-            _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode);
+            var heightOffsetReferencePoint = document.GetElement("//*:Envelope/*:lowerCorner").Value.Split(' ')
+                .Select(s => double.Parse(s, CultureInfo.InvariantCulture)).ToList();
+
+            _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode, heightOffsetReferencePoint);
 
             var rpSpatialElements = GetRpSpatialElements(document);
             var czmlDataCollection = new CzmlDataCollection();
