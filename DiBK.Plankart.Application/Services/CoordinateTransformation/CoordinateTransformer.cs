@@ -98,6 +98,9 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
 
         private static async Task<double> GetHeightOffset(IReadOnlyList<double> referencePoint, int fromEpsg, int toEpsg)
         {
+            if (toEpsg == Epsg.CesiumCoordinateSystemCode)
+                toEpsg = Epsg.CesiumCoordinateSystemCode2D;
+
             var x = referencePoint[0];
             var y = referencePoint[1];
             var h = referencePoint[2];
