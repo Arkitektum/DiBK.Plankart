@@ -4,7 +4,7 @@ using MaxRev.Gdal.Core;
 using OSGeo.OSR;
 using Xunit;
 
-namespace DiBK.Plankart.Application.Tests.Services.CoordinateTransformation
+namespace DiBK.Plankart.Application.Tests.Services
 {
     public class TransformationTestGdal
     {

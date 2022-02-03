@@ -11,11 +11,11 @@ using MaxRev.Gdal.Core;
 using OSGeo.OSR;
 
 [assembly: InternalsVisibleTo("DiBK.Plankart.Application.Tests")]
-namespace DiBK.Plankart.Application.Services.CoordinateTransformation
+namespace DiBK.Plankart.Application.Services
 {
     internal class CoordinateTransformer
     {
-        private readonly OSGeo.OSR.CoordinateTransformation _coordinateTransformation;
+        private readonly CoordinateTransformation _coordinateTransformation;
         private readonly double _heightOffset;
 
         public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode, IReadOnlyList<double> heightOffsetReferencePoint=null)
@@ -28,7 +28,7 @@ namespace DiBK.Plankart.Application.Services.CoordinateTransformation
             sourceCoordinateSystem.ImportFromEPSG(sourceEpsgCode);
             targetCoordinateSystem.ImportFromEPSG(targetEpsgCode);
 
-            _coordinateTransformation = new OSGeo.OSR.CoordinateTransformation(sourceCoordinateSystem, targetCoordinateSystem);
+            _coordinateTransformation = new CoordinateTransformation(sourceCoordinateSystem, targetCoordinateSystem);
             if (_coordinateTransformation == null)
                 throw new ArgumentException("Invalid EPSG code(s) or unsupported transformation");
 

@@ -6,7 +6,6 @@ using System.Xml.Linq;
 using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Models.Map.Cesium;
-using DiBK.Plankart.Application.Services.CoordinateTransformation;
 
 namespace DiBK.Plankart.Application.Services
 {

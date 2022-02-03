@@ -8,7 +8,6 @@ using System.Xml.Linq;
 using DiBK.Plankart.Application.Exceptions;
 using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Services;
-using DiBK.Plankart.Application.Services.CoordinateTransformation;
 using Wmhelp.XPath2;
 using Xunit;
 
