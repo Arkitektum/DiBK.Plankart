@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using DiBK.Plankart.Application.Models.Map;
+using DiBK.Plankart.Application.Utils;
 using MaxRev.Gdal.Core;
 using OSGeo.OSR;
 
@@ -18,7 +18,7 @@ namespace DiBK.Plankart.Application.Services
         private readonly CoordinateTransformation _coordinateTransformation;
         private readonly double _heightOffset;
 
-        public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode, IReadOnlyList<double> heightOffsetReferencePoint=null)
+        public CoordinateTransformer(int sourceEpsgCode, int targetEpsgCode, IReadOnlyList<string> heightOffsetReferencePoint=null)
         {
             GdalBase.ConfigureAll();
 
@@ -96,7 +96,7 @@ namespace DiBK.Plankart.Application.Services
             return (x, y, z);
         }
 
-        private static async Task<double> GetHeightOffset(IReadOnlyList<double> referencePoint, int fromEpsg, int toEpsg)
+        private static async Task<double> GetHeightOffset(IReadOnlyList<string> referencePoint, int fromEpsg, int toEpsg)
         {
             if (toEpsg == Epsg.CesiumCoordinateSystemCode)
                 toEpsg = Epsg.CesiumCoordinateSystemCode2D;
@@ -105,14 +105,12 @@ namespace DiBK.Plankart.Application.Services
             var y = referencePoint[1];
             var h = referencePoint[2];
 
-            var nfi = new NumberFormatInfo { NumberDecimalSeparator = "." };
-
-            var getUri = new Uri($"https://ws.geonorge.no/transformering/v1/transformer?x={x.ToString(nfi)}&y={y.ToString(nfi)}&z={h.ToString(nfi)}&fra={fromEpsg}&til={toEpsg}");
+            var getUri = new Uri($"https://ws.geonorge.no/transformering/v1/transformer?x={x}&y={y}&z={h}&fra={fromEpsg}&til={toEpsg}");
 
             using var client = new HttpClient();
             var coordinate = await client.GetFromJsonAsync<Coordinate>(getUri);
 
-            return coordinate?.Z - h ?? 0;
+            return coordinate?.Z - double.Parse(h, ApplicationConfig.DoubleFormatInfo) ?? 0;
         }
     }
 }

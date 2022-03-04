@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using DiBK.Plankart.Application.Exceptions;
 using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Services;
+using DiBK.Plankart.Application.Utils;
 using Wmhelp.XPath2;
 using Xunit;
 
@@ -24,7 +25,8 @@ namespace DiBK.Plankart.Application.Tests.Services
             var sourceCoordinate = new List<double>{299416.02, 6695529.56, 138};
             var sourceCoordinate2 = new List<double>{299439.62, 6695534.72, 149.66};
 
-            var coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode, sourceCoordinate2);
+            var coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, targetEpsgCode,
+                sourceCoordinate2.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray());
 
             var transformedCoordinate = coordinateTransformer.Transform(sourceCoordinate);
             var transformedCoordinateAndHeight = coordinateTransformer.Transform(sourceCoordinate, true);

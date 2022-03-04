@@ -1,22 +1,17 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
+using DiBK.Plankart.Application.Utils;
 
 namespace DiBK.Plankart.Application.Models.Map
 {
     internal class Coordinate
     {
-        private readonly NumberFormatInfo _nfi = new()
-        {
-            NumberDecimalSeparator = "."
-        };
-
         public double X { get; init; }
         public double Y { get; init; }
         public double Z { get; init; }
 
         public override string ToString()
         {
-            return $"{X.ToString(_nfi)}, {Y.ToString(_nfi)}, {Z.ToString(_nfi)}";
+            return $"{X.ToString(ApplicationConfig.DoubleFormatInfo)}, {Y.ToString(ApplicationConfig.DoubleFormatInfo)}, {Z.ToString(ApplicationConfig.DoubleFormatInfo)}";
         }
 
         public IEnumerable<double> ToEnumerable()

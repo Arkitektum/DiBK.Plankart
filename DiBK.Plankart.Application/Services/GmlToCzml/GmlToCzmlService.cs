@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Models.Map.Cesium;
+using DiBK.Plankart.Application.Utils;
 
 namespace DiBK.Plankart.Application.Services
 {
@@ -86,7 +87,7 @@ namespace DiBK.Plankart.Application.Services
             foreach (var positionList in positionLists)
             {
                 var sourceCoordinates = positionList.Value.Split(' ')
-                    .Select(v => double.Parse(v, NumberFormatInfo.InvariantInfo)).ToList();
+                    .Select(v => double.Parse(v, ApplicationConfig.DoubleFormatInfo)).ToList();
 
                 var transformedCoordinates = _coordinateTransformer?.Transform(sourceCoordinates);
 
