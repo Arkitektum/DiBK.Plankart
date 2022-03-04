@@ -5,6 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Arkitektum.Cesium.Ion.RestApiSharp" Version="1.0.0" />
 		<PackageReference Include="Arkitektum.XmlSchemaValidator" Version="0.1.3" />
 		<PackageReference Include="DiBK.RuleValidator.Rules.Gml" Version="1.0.6" />
 		<PackageReference Include="MaxRev.Gdal.Core" Version="3.3.3.110" />
