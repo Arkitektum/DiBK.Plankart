@@ -14,15 +14,14 @@ namespace DiBK.Plankart.Application.Services
     {
         private CoordinateTransformer _coordinateTransformer;
 
-        public CzmlDataCollection CreateCzmlCollection(XDocument document, string epsgCode, Dictionary<string, string> geoElementMappings)
+        public CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope, Dictionary<string, string> geoElementMappings)
         {
             if (document == null)
                 return null;
 
-            var sourceEpsgCode = int.Parse(epsgCode.Remove(0, 5));
+            var sourceEpsgCode = int.Parse(envelope.Epsg.Code.Remove(0, 5));
 
-            var heightOffsetReferencePoint = document.GetElement("//*:Envelope/*:lowerCorner").Value.Split(' ')
-                .Select(s => double.Parse(s, CultureInfo.InvariantCulture)).ToList();
+            var heightOffsetReferencePoint = envelope.LowerCorner;
 
             _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode, heightOffsetReferencePoint);
 

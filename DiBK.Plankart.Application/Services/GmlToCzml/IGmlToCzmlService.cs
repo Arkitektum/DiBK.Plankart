@@ -6,5 +6,5 @@ namespace DiBK.Plankart.Application.Services;
 
 public interface IGmlToCzmlService
 {
-    CzmlDataCollection CreateCzmlCollection(XDocument document, string epsgCode, Dictionary<string, string> geoElementMappings);
+    CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope, Dictionary<string, string> geoElementMappings);
 }

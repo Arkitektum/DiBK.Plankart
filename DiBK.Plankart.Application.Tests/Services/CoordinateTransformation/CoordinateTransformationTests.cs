@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,7 +56,9 @@ namespace DiBK.Plankart.Application.Tests.Services
 
             var xDoc = LoadXDocument(filePath).Result;
 
-            var dataCollection = new GmlToCzmlService().CreateCzmlCollection(xDoc, GetEpsg(xDoc).Code, null);
+            var envelope = GetEnvelope(xDoc);
+
+            var dataCollection = new GmlToCzmlService().CreateCzmlCollection(xDoc, envelope, null);
 
             Assert.True(dataCollection.CzmlStrings.Any());
         }
@@ -83,6 +85,25 @@ namespace DiBK.Plankart.Application.Tests.Services
                 return null;
 
             return Epsg.Create(srsName);
+        }
+
+        private static Envelope GetEnvelope(XDocument document)
+        {
+            const string xPathToEnvelope = "//*:FeatureCollection/*:boundedBy/*:Envelope";
+            var envelope = document.XPath2SelectElement(xPathToEnvelope);
+            var lowerCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:lowerCorner").Value;
+            var upperCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:upperCorner").Value;
+
+            var lowerCorner = lowerCornerValue.Split(' ').Select(double.Parse).Select(c => c - 500);
+            var upperCorner = upperCornerValue.Split(' ').Select(double.Parse).Select(c => c + 500);
+
+            return new Envelope
+            {
+                Epsg = GetEpsg(document),
+                Dimension = int.Parse(envelope.Attribute("srsDimension").Value),
+                LowerCorner = lowerCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
+                UpperCorner = upperCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
+            };
         }
     }
 }

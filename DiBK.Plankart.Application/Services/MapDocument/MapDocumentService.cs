@@ -2,9 +2,11 @@
 using DiBK.Plankart.Application.Models.Map;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using DiBK.Plankart.Application.Utils;
 using Wmhelp.XPath2;
 
 namespace DiBK.Plankart.Application.Services
@@ -44,20 +46,20 @@ namespace DiBK.Plankart.Application.Services
             if (document == null)
                 return null;
 
-            var epsg = GetEpsg(document);
+            var envelope = GetEnvelope(document);
 
             return new MapDocument
             {
                 Id = GetId(document),
                 Name = GetName(document),
                 Title = GetTitle(document),
-                Epsg = epsg,
+                Epsg = envelope.Epsg,
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
                 FileSize = file.Length,
                 GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(new XDocument(document), new() { { "RpPåskrift", "tekstplassering" } }),
                 ValidationResult = validationResult,
-                CzmlData = _gmlToCzmlService.CreateCzmlCollection(document, epsg.Code, null),
+                CzmlData = envelope.Dimension == 2 ? null : _gmlToCzmlService.CreateCzmlCollection(document, envelope, null),
             };
         }
 
@@ -99,6 +101,25 @@ namespace DiBK.Plankart.Application.Services
                 return null;
 
             return Epsg.Create(srsName);
+        }
+
+        private static Envelope GetEnvelope(XDocument document)
+        {
+            const string xPathToEnvelope = "//*:FeatureCollection/*:boundedBy/*:Envelope";
+            var envelope = document.XPath2SelectElement(xPathToEnvelope);
+            var lowerCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:lowerCorner").Value;
+            var upperCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:upperCorner").Value;
+
+            var lowerCorner = lowerCornerValue.Split(' ').Select(s => double.Parse(s, ApplicationConfig.DoubleFormatInfo));
+            var upperCorner = upperCornerValue.Split(' ').Select(s => double.Parse(s, ApplicationConfig.DoubleFormatInfo));
+
+            return new Envelope
+            {
+                Epsg = GetEpsg(document),
+                Dimension = int.Parse(envelope.Attribute("srsDimension").Value),
+                LowerCorner = lowerCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
+                UpperCorner = upperCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
+            };
         }
 
         private static string GetVerticalDatum(XDocument document)
