@@ -11,8 +11,15 @@ namespace DiBK.Plankart.Application.Models.Map
         public string VerticalDatum { get; init; }
         public string FileName { get; init; }
         public long FileSize { get; init; }
-        public ValidationResult ValidationResult { get; init; }
+        public ValidationResult ValidationResult { get; set; }
         public GeoJsonFeatureCollection GeoJson { get; init; } = new();
+        public ValidationResult ValidationResult3d { get; set; }
+        public CzmlDataCollection CzmlData { get; set; } = new();
+    }
+
+    public class MapDocument3D
+    {
+        public ValidationResult ValidationResult { get; set; }
         public CzmlDataCollection CzmlData { get; set; } = new();
     }
 }

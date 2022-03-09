@@ -58,7 +58,7 @@ namespace DiBK.Plankart.Application.Tests.Services
 
             var envelope = GetEnvelope(xDoc);
 
-            var dataCollection = new GmlToCzmlService().CreateCzmlCollection(xDoc, envelope, null);
+            var dataCollection = new GmlToCzmlService().CreateCzmlCollection(xDoc, envelope);
 
             Assert.True(dataCollection.CzmlStrings.Any());
         }

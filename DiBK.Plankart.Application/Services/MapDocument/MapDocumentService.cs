@@ -57,9 +57,29 @@ namespace DiBK.Plankart.Application.Services
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
                 FileSize = file.Length,
-                GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(new XDocument(document), new() { { "RpPåskrift", "tekstplassering" } }),
                 ValidationResult = validationResult,
-                CzmlData = envelope.Dimension == 2 ? null : _gmlToCzmlService.CreateCzmlCollection(document, envelope, null),
+                GeoJson = _gmlToGeoJsonService.CreateGeoJsonDocument(new XDocument(document), new() { { "RpPåskrift", "tekstplassering" } }),
+            };
+        }
+
+        public async Task<MapDocument3D> UpdateWith3dData(IFormFile file)
+        {
+            var validationResult = await _validationService.ValidateAsync(file);
+
+            if (!validationResult.XsdValidated || !validationResult.EpsgValidated)
+                return new MapDocument3D { ValidationResult = validationResult };
+
+            var document = await LoadXDocument(file);
+
+            if (document == null)
+                return null;
+
+            var envelope = GetEnvelope(document);
+
+            return new MapDocument3D
+            {
+                ValidationResult = validationResult,
+                CzmlData = _gmlToCzmlService.CreateCzmlCollection(document, envelope),
             };
         }
 

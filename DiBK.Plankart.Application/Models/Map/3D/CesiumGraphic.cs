@@ -4,7 +4,7 @@ using System.Linq;
 using DiBK.Plankart.Application.Services;
 using Newtonsoft.Json.Linq;
 
-namespace DiBK.Plankart.Application.Models.Map.Cesium
+namespace DiBK.Plankart.Application.Models.Map
 {
     public abstract class CesiumGraphic
     {

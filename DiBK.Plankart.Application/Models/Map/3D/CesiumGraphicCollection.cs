@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace DiBK.Plankart.Application.Models.Map.Cesium
+namespace DiBK.Plankart.Application.Models.Map
 {
     internal class CesiumGraphicCollection
     {

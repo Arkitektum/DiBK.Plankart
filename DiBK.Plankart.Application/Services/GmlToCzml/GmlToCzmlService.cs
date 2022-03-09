@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
-using DiBK.Plankart.Application.Models.Map.Cesium;
 using DiBK.Plankart.Application.Utils;
 
 namespace DiBK.Plankart.Application.Services
@@ -14,7 +12,7 @@ namespace DiBK.Plankart.Application.Services
     {
         private CoordinateTransformer _coordinateTransformer;
 
-        public CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope, Dictionary<string, string> geoElementMappings)
+        public CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope)
         {
             if (document == null)
                 return null;

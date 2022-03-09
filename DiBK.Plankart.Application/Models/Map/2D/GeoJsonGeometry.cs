@@ -3,15 +3,19 @@
     public abstract class GeoJsonGeometry
     {
         public string Type { get; set; }
+
+        public GeoJsonGeometry(string type)
+        {
+            Type = type;
+        }
     }
 
     public class Point : GeoJsonGeometry
     {
         public double[] Coordinates { get; set; }
 
-        public Point(string type, double[] coordinates)
+        public Point(string type, double[] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }
@@ -20,9 +24,8 @@
     {
         public double[][] Coordinates { get; set; }
 
-        public MultiPoint(string type, double[][] coordinates)
+        public MultiPoint(string type, double[][] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }
@@ -31,9 +34,8 @@
     {
         public double[][] Coordinates { get; set; }
 
-        public LineString(string type, double[][] coordinates)
+        public LineString(string type, double[][] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }
@@ -42,9 +44,8 @@
     {
         public double[][][] Coordinates { get; set; }
 
-        public MultiLineString(string type, double[][][] coordinates)
+        public MultiLineString(string type, double[][][] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }
@@ -53,9 +54,8 @@
     {
         public double[][][] Coordinates { get; set; }
 
-        public Polygon(string type, double[][][] coordinates)
+        public Polygon(string type, double[][][] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }
@@ -64,9 +64,8 @@
     {
         public double[][][][] Coordinates { get; set; }
 
-        public MultiPolygon(string type, double[][][][] coordinates)
+        public MultiPolygon(string type, double[][][][] coordinates) : base(type)
         {
-            Type = type;
             Coordinates = coordinates;
         }
     }

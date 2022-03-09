@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Threading.Tasks;
+using DiBK.Plankart.Application.Models.Map;
 
 namespace DiBK.Plankart.Controllers
 {
@@ -42,6 +43,32 @@ namespace DiBK.Plankart.Controllers
                 var document = await _mapDocumentService.CreateMapDocument(file);
                 var serialized = JsonConvert.SerializeObject(document, _jsonSerializerSettings);
 
+                return Ok(serialized);
+            }
+            catch (Exception exception)
+            {
+                var result = HandleException(exception);
+
+                if (result != null)
+                    return result;
+
+                throw;
+            }
+        }
+        
+        [HttpPost("/MapDocument3D")]
+        public async Task<IActionResult> Create3dMapDocument()
+        {
+            try
+            {
+                var file = await _multipartRequestService.GetFileFromMultipart();
+
+                if (file == null)
+                    return BadRequest();
+
+                var mapDocument3d = await _mapDocumentService.UpdateWith3dData(file);
+                var serialized = JsonConvert.SerializeObject(mapDocument3d, _jsonSerializerSettings);
+                
                 return Ok(serialized);
             }
             catch (Exception exception)
