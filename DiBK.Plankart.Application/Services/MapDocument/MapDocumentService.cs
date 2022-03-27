@@ -2,8 +2,6 @@
 using DiBK.Plankart.Application.Models.Map;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -37,7 +35,7 @@ namespace DiBK.Plankart.Application.Services
                     ValidationResult = validationResult 
                 };
             }
-
+            
             var document = await LoadXDocument(file);
 
             if (document == null)
