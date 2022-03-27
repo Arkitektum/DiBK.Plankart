@@ -57,32 +57,13 @@ namespace DiBK.Plankart.Application.Services
 
         private static Geometry GetOGRGeometry(XElement geoElement)
         {
-            if (!TryCreateGeometry(geoElement, out var tempGeometry))
+            if (!TryCreateGeometry(geoElement, out var geometry))
                 return null;
 
-            if (!geoElement.Has("//gml:Arc"))
-                return tempGeometry;
+            var linearGeometry = geometry.GetLinearGeometry(0, Array.Empty<string>());
+            geometry.Dispose();
 
-            Geometry geometry = null;
-            var geometryType = tempGeometry.GetGeometryType();
-
-            switch (geometryType)
-            {
-                case wkbGeometryType.wkbCircularString:
-                    geometry = Ogr.ForceToLineString(tempGeometry);
-                    break;
-                case wkbGeometryType.wkbSurface:
-                    geometry = Ogr.ForceToPolygon(tempGeometry);
-                    break;
-                case wkbGeometryType.wkbMultiSurface:
-                    geometry = Ogr.ForceToMultiPolygon(tempGeometry);
-                    break;
-                default:
-                    break;
-            }
-
-            tempGeometry.Dispose();
-            return geometry;
+            return linearGeometry;
         }
 
         private static bool TryCreateGeometry(XElement geoElement, out Geometry geometry)
