@@ -36,6 +36,9 @@ namespace DiBK.Plankart
             services.AddTransient<IGmlToCzmlService, GmlToCzmlService>();
             services.AddTransient<IMapDocumentService, MapDocumentService>();
             services.AddTransient<IMultipartRequestService, MultipartRequestService>();
+            services.AddTransient<ICesiumIonResourceUploader, CesiumIonResourceUploader>();
+            services.AddTransient<IHeightDataFetcher, HeightDataFetcher>();
+            services.AddTransient<ITerrainResourceService, TerrainResourceService>();
             services.AddHttpClient<IValidationService, ValidationService>();
 
             services.Configure<ValidationSettings>(Configuration.GetSection(ValidationSettings.SectionName));
@@ -56,6 +59,7 @@ namespace DiBK.Plankart
             app.UseCors(options => options
                 .AllowAnyOrigin()
                 .AllowAnyMethod()
+                .AllowAnyHeader()
             );
 
             app.Use(async (context, next) => {

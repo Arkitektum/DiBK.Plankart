@@ -6,8 +6,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using DiBK.Plankart.Application.Utils;
 using Wmhelp.XPath2;
+using static DiBK.Plankart.Application.Utils.ApplicationConfig;
 
 namespace DiBK.Plankart.Application.Services
 {
@@ -53,6 +53,7 @@ namespace DiBK.Plankart.Application.Services
                 Id = GetId(document),
                 Name = GetName(document),
                 Title = GetTitle(document),
+                Envelope = envelope,
                 Epsg = envelope.Epsg,
                 VerticalDatum = GetVerticalDatum(document),
                 FileName = file.FileName,
@@ -129,16 +130,15 @@ namespace DiBK.Plankart.Application.Services
             var envelope = document.XPath2SelectElement(xPathToEnvelope);
             var lowerCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:lowerCorner").Value;
             var upperCornerValue = document.XPath2SelectElement($"{xPathToEnvelope}/*:upperCorner").Value;
-
-            var lowerCorner = lowerCornerValue.Split(' ').Select(s => double.Parse(s, ApplicationConfig.DoubleFormatInfo));
-            var upperCorner = upperCornerValue.Split(' ').Select(s => double.Parse(s, ApplicationConfig.DoubleFormatInfo));
+            var envelopeAsString = $"{lowerCornerValue.Replace(' ', ',')},{upperCornerValue.Replace(' ', ',')}";
 
             return new Envelope
             {
                 Epsg = GetEpsg(document),
                 Dimension = int.Parse(envelope.Attribute("srsDimension").Value),
-                LowerCorner = lowerCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
-                UpperCorner = upperCorner.Select(v => v.ToString(ApplicationConfig.DoubleFormatInfo)).ToArray(),
+                LowerCorner = lowerCornerValue.Split(' '),
+                UpperCorner = upperCornerValue.Split(' '),
+                AsString = envelopeAsString,
             };
         }
 

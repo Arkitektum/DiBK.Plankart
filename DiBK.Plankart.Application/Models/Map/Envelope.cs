@@ -2,9 +2,10 @@
 {
     public class Envelope
     {
-        public Epsg Epsg { get; set; }
-        public int Dimension { get; set; }
-        public string [] LowerCorner { get; set; }
-        public string [] UpperCorner { get; set; }
+        public Epsg Epsg { get; init; }
+        public int Dimension { get; init; }
+        public string [] LowerCorner { get; init; }
+        public string [] UpperCorner { get; init; }
+        public string AsString { get; init; }
     }
 }

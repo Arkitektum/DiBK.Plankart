@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Threading.Tasks;
-using DiBK.Plankart.Application.Models.Map;
 
 namespace DiBK.Plankart.Controllers
 {
