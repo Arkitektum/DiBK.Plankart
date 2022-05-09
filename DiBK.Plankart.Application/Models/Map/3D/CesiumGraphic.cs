@@ -77,9 +77,9 @@ namespace DiBK.Plankart.Application.Models.Map
                 return rpSpatialElementType switch
                 {
                     GmlToCzmlService.RpSpatialElement.RpBestemmelseRegTerreng => new [] {200,100,0,75},
-                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => new[] {255,255,51,75},
+                    GmlToCzmlService.RpSpatialElement.RpHandlingRom => new[] {150,150,150,75},
                     GmlToCzmlService.RpSpatialElement.RpBestemmelseRom => new[] {0,0,0,0},
-                    GmlToCzmlService.RpSpatialElement.RpHensynRom => new[] { 255,255,255,75},
+                    GmlToCzmlService.RpSpatialElement.RpHensynRom => new[] { 150,150,150,75},
                     _ => throw new ArgumentOutOfRangeException()
                 };
             }
