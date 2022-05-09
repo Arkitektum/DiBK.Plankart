@@ -50,11 +50,7 @@ public class HeightDataFetcher : IHeightDataFetcher
     
     private static async Task<HttpResponseMessage> GetAsyncWrapper(string bBox, int epsgCode)
     {
-        using var client = new HttpClient();
-#if DEBUG
-        return await client.GetAsync(string.Format(LocalUrl, bBox, epsgCode));
-#endif
-        return await client.GetAsync(string.Format(Url, bBox, epsgCode));
+        return await new HttpClient().GetAsync(string.Format(Url, bBox, epsgCode));
     }
 
     private static IEnumerable<string> SplitBoundingBoxIntoMaximum1000By1000Squares(IReadOnlyList<double> boundingBox)
