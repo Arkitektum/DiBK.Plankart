@@ -5,5 +5,5 @@ namespace DiBK.Plankart.Application.Services;
 
 public interface ITerrainResourceService
 {
-    public Task<int?> CreateTerrainResourceAsync(TerrainRequest terrainRequest);
+    public Task<CesiumIonAsset> CreateTerrainResourceAsync(TerrainRequest terrainRequest);
 }

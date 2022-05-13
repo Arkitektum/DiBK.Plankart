@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -36,13 +37,16 @@ public class HeightDataFetcher : IHeightDataFetcher
         var results = await Task.WhenAll(listOfResults);
 
         var stream = new MemoryStream();
+        using var zipStream = new ZipArchive(stream, ZipArchiveMode.Update, true);
+
+        var entryNumber = 1;
 
         foreach (var result in results)
         {
-            await result.CopyToAsync(stream);
+            await using var entryStream = zipStream.CreateEntry($"entry{entryNumber}.tiff").Open();
+            await result.CopyToAsync(entryStream);
+            entryNumber++;
         }
-
-        stream.Position = 0;
 
         return stream;
     }

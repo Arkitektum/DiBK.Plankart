@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 
 namespace DiBK.Plankart
 {
@@ -25,6 +26,9 @@ namespace DiBK.Plankart
         {
             services.AddControllers();
 
+            services.AddDbContext<CesiumIonResourceDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("cesiumIonDb")));
+
             services.AddSwaggerGen(options =>
             {
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
@@ -40,6 +44,8 @@ namespace DiBK.Plankart
             services.AddTransient<IHeightDataFetcher, HeightDataFetcher>();
             services.AddTransient<ITerrainResourceService, TerrainResourceService>();
             services.AddHttpClient<IValidationService, ValidationService>();
+            services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient<IAccessTokenProvider, AccessTokenProvider>();
 
             services.Configure<ValidationSettings>(Configuration.GetSection(ValidationSettings.SectionName));
         }
