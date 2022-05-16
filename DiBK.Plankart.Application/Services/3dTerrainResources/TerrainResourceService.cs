@@ -48,6 +48,9 @@ namespace DiBK.Plankart.Application.Services
                 West = envelopeArray[1],
                 North = envelopeArray[2],
                 East = envelopeArray[3],
+                Added = DateTime.Now,
+                LastAccessed = DateTime.Now,
+                NumberOfUsages = 1,
             };
         }
 

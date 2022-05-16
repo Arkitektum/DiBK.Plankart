@@ -19,6 +19,8 @@ namespace DiBK.Plankart.Application.Models.Map
         public double East { get; set; }
         public DateTime Added { get; set; }
         public DateTime LastAccessed { get; set; }
+        public int NumberOfUsages { get; set; }
+        public int PriorityScore => CalculatePriorityScore();
 
         public bool Intersects(CesiumIonAsset asset)
         {
@@ -29,20 +31,6 @@ namespace DiBK.Plankart.Application.Models.Map
             if (asset.West > East)
                 return false;
             if (asset.South > North)
-                return false;
-
-            return true;
-        }
-
-        public bool Encloses(CesiumIonAsset asset)
-        {
-            if (South > asset.South)
-                return false;
-            if (West > asset.West)
-                return false;
-            if (North < asset.North)
-                return false;
-            if (East < asset.East)
                 return false;
 
             return true;
@@ -64,25 +52,23 @@ namespace DiBK.Plankart.Application.Models.Map
             return true;
         }
 
-        public bool EnclosesWithMargin(string envelope, double margin)
+        public bool EnclosesWithMargin(CesiumIonAsset asset, double margin)
         {
-            var envelopeAsDouble = envelope.Split(',').Select(e => double.Parse(e, ApplicationConfig.DoubleFormatInfo)).ToArray();
-            
-            if (South - margin > envelopeAsDouble[0])
+            if (South - margin > asset.South)
                 return false;
-            if (West - margin > envelopeAsDouble[1])
+            if (West - margin > asset.West)
                 return false;
-            if (North + margin < envelopeAsDouble[2])
+            if (North + margin < asset.North)
                 return false;
-            if (East + margin < envelopeAsDouble[3])
+            if (East + margin < asset.East)
                 return false;
 
             return true;
         }
 
-        public bool IsEnclosedBy(CesiumIonAsset asset)
+        private int CalculatePriorityScore()
         {
-            return asset.Encloses(this);
+            return NumberOfUsages - (DateTime.Now.Day - LastAccessed.Day) + (int)((North - South) * (East - West))/1000;
         }
     }
 }
