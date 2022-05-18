@@ -1,19 +1,18 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace DiBK.Plankart.Application.Services
+namespace DiBK.Plankart.Application.Services;
+
+public class AccessTokenProvider : IAccessTokenProvider
 {
-    public class AccessTokenProvider : IAccessTokenProvider
+    private readonly IConfiguration _configuration;
+
+    public AccessTokenProvider(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        _configuration = configuration;
+    }
 
-        public AccessTokenProvider(IConfiguration configuration)
-        {
-            _configuration = configuration;
-        }
-
-        public string CesiumIonToken()
-        {
-            return _configuration.GetSection("AccessTokens")["CesiumIon"];
-        }
+    public string CesiumIonToken()
+    {
+        return _configuration.GetSection("AccessTokens")["CesiumIon"];
     }
 }

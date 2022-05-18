@@ -1,8 +1,7 @@
-﻿namespace DiBK.Plankart.Application.Models.Map
+﻿namespace DiBK.Plankart.Application.Models.Map;
+
+public class TerrainRequest
 {
-    public class TerrainRequest
-    {
-        public string Envelope { get; set; }
-        public int EpsgCode { get; set; }
-    }
+    public string Envelope { get; set; }
+    public int EpsgCode { get; set; }
 }

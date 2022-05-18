@@ -1,9 +1,8 @@
 ﻿using System.Globalization;
 
-namespace DiBK.Plankart.Application.Utils
+namespace DiBK.Plankart.Application.Utils;
+
+internal static class ApplicationConfig
 {
-    internal static class ApplicationConfig
-    {
-        public static readonly NumberFormatInfo DoubleFormatInfo = NumberFormatInfo.InvariantInfo;
-    }
+    public static readonly NumberFormatInfo DoubleFormatInfo = NumberFormatInfo.InvariantInfo;
 }

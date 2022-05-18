@@ -3,52 +3,51 @@ using System.Threading.Tasks;
 using DiBK.Plankart.Application.Models.Map;
 using Microsoft.EntityFrameworkCore;
 
-namespace DiBK.Plankart.Application.Services
+namespace DiBK.Plankart.Application.Services;
+
+public class UnitOfWork : IUnitOfWork
 {
-    public class UnitOfWork : IUnitOfWork
+    private readonly CesiumIonResourceDbContext _dbContext;
+
+    #region Repositories
+
+    public IRepository<CesiumIonAsset> AssetRepository => new GenericRepository<CesiumIonAsset>(_dbContext);
+
+    #endregion
+
+    public UnitOfWork(CesiumIonResourceDbContext dbContext)
     {
-        private readonly CesiumIonResourceDbContext _dbContext;
+        _dbContext = dbContext;
+    }
 
-        #region Repositories
+    public void Commit()
+    {
+        _dbContext.SaveChanges();
+    }
 
-        public IRepository<CesiumIonAsset> AssetRepository => new GenericRepository<CesiumIonAsset>(_dbContext);
+    public async Task<int> CommitAsync()
+    {
+        return await _dbContext.SaveChangesAsync();
+    }
 
-        #endregion
+    public void Dispose()
+    {
+        _dbContext.Dispose();
+    }
 
-        public UnitOfWork(CesiumIonResourceDbContext dbContext)
+    public void RejectChanges()
+    {
+        foreach (var entry in _dbContext.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
         {
-            _dbContext = dbContext;
-        }
-
-        public void Commit()
-        {
-            _dbContext.SaveChanges();
-        }
-
-        public async Task<int> CommitAsync()
-        {
-            return await _dbContext.SaveChangesAsync();
-        }
-
-        public void Dispose()
-        {
-            _dbContext.Dispose();
-        }
-
-        public void RejectChanges()
-        {
-            foreach (var entry in _dbContext.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
+            switch (entry.State)
             {
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                        entry.State = EntityState.Detached;
-                        break;
-                    case EntityState.Modified:
-                    case EntityState.Deleted:
-                        entry.Reload();
-                        break;
-                }
+                case EntityState.Added:
+                    entry.State = EntityState.Detached;
+                    break;
+                case EntityState.Modified:
+                case EntityState.Deleted:
+                    entry.Reload();
+                    break;
             }
         }
     }

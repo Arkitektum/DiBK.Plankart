@@ -6,107 +6,106 @@ using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
 using DiBK.Plankart.Application.Utils;
 
-namespace DiBK.Plankart.Application.Services
+namespace DiBK.Plankart.Application.Services;
+
+public class GmlToCzmlService : IGmlToCzmlService
 {
-    public class GmlToCzmlService : IGmlToCzmlService
+    private CoordinateTransformer _coordinateTransformer;
+
+    public CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope)
     {
-        private CoordinateTransformer _coordinateTransformer;
+        if (document == null)
+            return null;
 
-        public CzmlDataCollection CreateCzmlCollection(XDocument document, Envelope envelope)
+        var sourceEpsgCode = int.Parse(envelope.Epsg.Code.Remove(0, 5));
+
+        var heightOffsetReferencePoint = envelope.LowerCorner;
+
+        _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode, heightOffsetReferencePoint);
+
+        var rpSpatialElements = GetRpSpatialElements(document);
+        var czmlDataCollection = new CzmlDataCollection();
+
+        foreach (var (_, cesiumGraphicCollections) in rpSpatialElements)
         {
-            if (document == null)
-                return null;
-
-            var sourceEpsgCode = int.Parse(envelope.Epsg.Code.Remove(0, 5));
-
-            var heightOffsetReferencePoint = envelope.LowerCorner;
-
-            _coordinateTransformer = new CoordinateTransformer(sourceEpsgCode, Epsg.CesiumCoordinateSystemCode, heightOffsetReferencePoint);
-
-            var rpSpatialElements = GetRpSpatialElements(document);
-            var czmlDataCollection = new CzmlDataCollection();
-
-            foreach (var (_, cesiumGraphicCollections) in rpSpatialElements)
+            foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
             {
-                foreach (var cesiumGraphicCollection in cesiumGraphicCollections)
-                {
-                    czmlDataCollection.CzmlStrings.Add(cesiumGraphicCollection.CzmlRepresentation);
-                }
+                czmlDataCollection.CzmlStrings.Add(cesiumGraphicCollection.CzmlRepresentation);
             }
-
-            return czmlDataCollection;
         }
 
-        private Dictionary<string, IEnumerable<CesiumGraphicCollection>> GetRpSpatialElements(XDocument xDoc)
-        {
-            var rpSpatialObjectsMappedByName = new Dictionary<string, IEnumerable<CesiumGraphicCollection>>();
+        return czmlDataCollection;
+    }
 
-            foreach (var rpSpatialElementName in Enum.GetNames<RpSpatialElement>())
+    private Dictionary<string, IEnumerable<CesiumGraphicCollection>> GetRpSpatialElements(XDocument xDoc)
+    {
+        var rpSpatialObjectsMappedByName = new Dictionary<string, IEnumerable<CesiumGraphicCollection>>();
+
+        foreach (var rpSpatialElementName in Enum.GetNames<RpSpatialElement>())
+        {
+            var rpSpatialElements = xDoc.GetElements($"//*:featureMember/*:{rpSpatialElementName}");
+            if (rpSpatialElements?.FirstOrDefault() == null)
+                continue;
+
+            rpSpatialObjectsMappedByName.Add(rpSpatialElementName, CreateCesiumGraphicsCollection(rpSpatialElements));
+        }
+
+        return rpSpatialObjectsMappedByName;
+    }
+
+    private IEnumerable<CesiumGraphicCollection> CreateCesiumGraphicsCollection(IEnumerable<XElement> spatialElements)
+    {
+        var cesiumGraphicsCollection = new List<CesiumGraphicCollection>();
+
+        foreach (var spatialElement in spatialElements)
+        {
+            Enum? surfaceType = null;
+
+            if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
+                surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
+
+            surfaceType ??= Enum.Parse<RpSpatialElement>(spatialElement.Name.LocalName);
+
+            cesiumGraphicsCollection.Add(new CesiumGraphicCollection
             {
-                var rpSpatialElements = xDoc.GetElements($"//*:featureMember/*:{rpSpatialElementName}");
-                if (rpSpatialElements?.FirstOrDefault() == null)
-                    continue;
-
-                rpSpatialObjectsMappedByName.Add(rpSpatialElementName, CreateCesiumGraphicsCollection(rpSpatialElements));
-            }
-
-            return rpSpatialObjectsMappedByName;
+                Id = spatialElement.GetElement("//*:lokalId").Value,
+                Type = surfaceType,
+                CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"), surfaceType)
+            });
         }
 
-        private IEnumerable<CesiumGraphicCollection> CreateCesiumGraphicsCollection(IEnumerable<XElement> spatialElements)
+        return cesiumGraphicsCollection;
+    }
+
+    private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum? surfaceType)
+    {
+        var cesiumGraphics = new List<CesiumGraphic>();
+
+        foreach (var positionList in positionLists)
         {
-            var cesiumGraphicsCollection = new List<CesiumGraphicCollection>();
+            var sourceCoordinates = positionList.Value.Split(' ')
+                .Select(v => double.Parse(v, ApplicationConfig.DoubleFormatInfo)).ToList();
 
-            foreach (var spatialElement in spatialElements)
-            {
-                Enum? surfaceType = null;
+            var transformedCoordinates = _coordinateTransformer?.Transform(sourceCoordinates);
 
-                if (spatialElement.Name.LocalName.Equals(RpSpatialElement.RpBestemmelseRegTerreng.ToString()))
-                    surfaceType = Enum.Parse<RegTerrengOverflateType>(spatialElement.GetValue("//*:overflateType"));
-
-                surfaceType ??= Enum.Parse<RpSpatialElement>(spatialElement.Name.LocalName);
-
-                cesiumGraphicsCollection.Add(new CesiumGraphicCollection
-                {
-                    Id = spatialElement.GetElement("//*:lokalId").Value,
-                    Type = surfaceType,
-                    CesiumGraphics = ConvertGmlToCesiumGraphics(spatialElement.GetElements("//*:posList"), surfaceType)
-                });
-            }
-
-            return cesiumGraphicsCollection;
+            cesiumGraphics.Add(new PolygonGraphic(transformedCoordinates, surfaceType));
         }
 
-        private List<CesiumGraphic> ConvertGmlToCesiumGraphics(IEnumerable<XElement> positionLists, Enum? surfaceType)
-        {
-            var cesiumGraphics = new List<CesiumGraphic>();
+        return cesiumGraphics;
+    }
 
-            foreach (var positionList in positionLists)
-            {
-                var sourceCoordinates = positionList.Value.Split(' ')
-                    .Select(v => double.Parse(v, ApplicationConfig.DoubleFormatInfo)).ToList();
+    public enum RpSpatialElement
+    {
+        RpHandlingRom,
+        RpBestemmelseRom,
+        RpHensynRom,
+        RpBestemmelseRegTerreng,
+    }
 
-                var transformedCoordinates = _coordinateTransformer?.Transform(sourceCoordinates);
-
-                cesiumGraphics.Add(new PolygonGraphic(transformedCoordinates, surfaceType));
-            }
-
-            return cesiumGraphics;
-        }
-
-        public enum RpSpatialElement
-        {
-            RpHandlingRom,
-            RpBestemmelseRom,
-            RpHensynRom,
-            RpBestemmelseRegTerreng,
-        }
-
-        public enum RegTerrengOverflateType
-        {
-            planlagt,
-            høyeste,
-            laveste,
-        }
+    public enum RegTerrengOverflateType
+    {
+        planlagt,
+        høyeste,
+        laveste,
     }
 }
