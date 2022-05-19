@@ -6,11 +6,11 @@ using Arkitektum.Cesium.Ion.RestApiSharp.Util;
 
 namespace DiBK.Plankart.Application.Services;
 
-public class CesiumIonResourceUploader : ICesiumIonResourceUploader
+public class CesiumIonAssetUploader : ICesiumIonAssetUploader
 {
     private readonly string _accessToken;
 
-    public CesiumIonResourceUploader(IAccessTokenProvider accessTokenProvider)
+    public CesiumIonAssetUploader(IAccessTokenProvider accessTokenProvider)
     {
         _accessToken = accessTokenProvider.CesiumIonToken();
     }

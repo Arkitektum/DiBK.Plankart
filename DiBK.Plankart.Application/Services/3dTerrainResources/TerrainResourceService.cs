@@ -9,41 +9,41 @@ namespace DiBK.Plankart.Application.Services;
 
 public class TerrainResourceService : ITerrainResourceService
 {
-    private readonly ICesiumIonResourceUploader _cesiumIonResourceUploader;
+    private readonly ICesiumIonAssetUploader _cesiumIonAssetUploader;
     private readonly IHeightDataFetcher _heightDataFetcher;
 
     public TerrainResourceService(
-        ICesiumIonResourceUploader cesiumIonResourceUploader,
+        ICesiumIonAssetUploader cesiumIonAssetUploader,
         IHeightDataFetcher heightDataFetcher)
     {
-        _cesiumIonResourceUploader = cesiumIonResourceUploader;
+        _cesiumIonAssetUploader = cesiumIonAssetUploader;
         _heightDataFetcher = heightDataFetcher;
     }
 
-    public async Task<CesiumIonAsset> CreateTerrainResourceAsync(TerrainRequest terrainRequest)
+    public async Task<CesiumIonTerrainResource> CreateTerrainResourceAsync(TerrainLocation terrainLocation)
     {
         var filename = Guid.NewGuid() + ".zip";
 
-        await using var stream = await _heightDataFetcher.FetchHighestResolutionAsStreamAsync(terrainRequest.Envelope, terrainRequest.EpsgCode);
+        await using var stream = await _heightDataFetcher.FetchHighestResolutionAsStreamAsync(terrainLocation.Envelope, terrainLocation.EpsgCode);
             
         await WriteFileStreamAsync(filename, stream);
 
         var readFileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
 
-        var cesiumIonAssetId = await _cesiumIonResourceUploader.UploadTerrainModelAsync(filename, readFileStream);
+        var cesiumIonAssetId = await _cesiumIonAssetUploader.UploadTerrainModelAsync(filename, readFileStream);
 
         if (cesiumIonAssetId == null)
             return null;
 
         await IoCleanUpAsync(readFileStream);
 
-        var envelopeArray = terrainRequest.Envelope.Split(',')
+        var envelopeArray = terrainLocation.Envelope.Split(',')
             .Select(c => double.Parse(c, ApplicationConfig.DoubleFormatInfo)).ToList();
 
-        return new CesiumIonAsset
+        return new CesiumIonTerrainResource
         {
             CesiumIonAssetId = cesiumIonAssetId.Value,
-            EpsgCode = terrainRequest.EpsgCode,
+            EpsgCode = terrainLocation.EpsgCode,
             South = envelopeArray[0],
             West = envelopeArray[1],
             North = envelopeArray[2],

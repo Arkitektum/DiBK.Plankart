@@ -24,7 +24,7 @@ public class FetchAndUploadTerrainDataTest : IDisposable
         writeFileStream.Dispose();
 
         using var readFileStream = new FileStream(Filename, FileMode.Open, FileAccess.Read);
-        _assetId = new CesiumIonResourceUploader(null).UploadTerrainModelAsync("nattlandsfjellet-highres-test", readFileStream).Result;
+        _assetId = new CesiumIonAssetUploader(null).UploadTerrainModelAsync("nattlandsfjellet-highres-test", readFileStream).Result;
 
         Assert.NotNull(_assetId);
     }

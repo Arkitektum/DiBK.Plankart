@@ -6,8 +6,8 @@ using DiBK.Plankart.Application.Utils;
 
 namespace DiBK.Plankart.Application.Models.Map;
 
-[Table("Assets")]
-public class CesiumIonAsset
+[Table("TerrainResources")]
+public class CesiumIonTerrainResource
 {
     [Key]
     public int Id { get; set; }
@@ -22,15 +22,15 @@ public class CesiumIonAsset
     public int NumberOfUsages { get; set; }
     public int PriorityScore => CalculatePriorityScore();
 
-    public bool Intersects(CesiumIonAsset asset)
+    public bool Intersects(CesiumIonTerrainResource terrainResource)
     {
-        if (asset.North < South)
+        if (terrainResource.North < South)
             return false;
-        if (asset.East < West)
+        if (terrainResource.East < West)
             return false;
-        if (asset.West > East)
+        if (terrainResource.West > East)
             return false;
-        if (asset.South > North)
+        if (terrainResource.South > North)
             return false;
 
         return true;
@@ -52,15 +52,15 @@ public class CesiumIonAsset
         return true;
     }
 
-    public bool EnclosesWithMargin(CesiumIonAsset asset, double margin)
+    public bool EnclosesWithMargin(CesiumIonTerrainResource terrainResource, double margin)
     {
-        if (South - margin > asset.South)
+        if (South - margin > terrainResource.South)
             return false;
-        if (West - margin > asset.West)
+        if (West - margin > terrainResource.West)
             return false;
-        if (North + margin < asset.North)
+        if (North + margin < terrainResource.North)
             return false;
-        if (East + margin < asset.East)
+        if (East + margin < terrainResource.East)
             return false;
 
         return true;

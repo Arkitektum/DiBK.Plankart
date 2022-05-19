@@ -7,7 +7,7 @@ namespace DiBK.Plankart.Application.Services;
 public class CesiumIonResourceDbContext : DbContext
 {
     private readonly string _connectionString;
-    public virtual DbSet<CesiumIonAsset> Assets { get; set; }
+    public DbSet<CesiumIonTerrainResource> TerrainResources { get; set; }
 
     public CesiumIonResourceDbContext(DbContextOptions<CesiumIonResourceDbContext> options) : base(options)
     {

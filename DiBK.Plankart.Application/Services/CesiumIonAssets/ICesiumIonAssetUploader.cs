@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace DiBK.Plankart.Application.Services;
 
-public interface ICesiumIonResourceUploader
+public interface ICesiumIonAssetUploader
 {
     public Task<int?> UploadTerrainModelAsync(string assetName, FileStream assetFileStream);
 }
