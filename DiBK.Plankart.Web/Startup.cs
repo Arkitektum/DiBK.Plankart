@@ -43,6 +43,7 @@ namespace DiBK.Plankart
             services.AddTransient<ICesiumIonAssetUploader, CesiumIonAssetUploader>();
             services.AddTransient<IHeightDataFetcher, HeightDataFetcher>();
             services.AddTransient<ITerrainResourceService, TerrainResourceService>();
+            services.AddTransient<ICesiumIonAssetService, CesiumIonAssetService>();
             services.AddHttpClient<IValidationService, ValidationService>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
             services.AddTransient<IAccessTokenProvider, AccessTokenProvider>();

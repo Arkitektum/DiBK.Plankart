@@ -5,39 +5,49 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DiBK.Plankart.Application.Services;
 
-public class GenericRepository<T> : IRepository<T> where T : class
+public abstract class GenericRepository<TContext, TEntity> : IRepository<TEntity> where TEntity : class
+    where TContext : DbContext
 {
-    private readonly CesiumIonResourceDbContext _dbContext;
+    protected readonly TContext DbContext;
 
-    private DbSet<T> DbSet => _dbContext.Set<T>();
-    public IQueryable<T> Entities => DbSet;
+    private DbSet<TEntity> DbSet => DbContext.Set<TEntity>();
 
-    public GenericRepository(CesiumIonResourceDbContext dbContext)
+    protected GenericRepository(TContext dbContext)
     {
-        _dbContext = dbContext;
+        DbContext = dbContext;
     }
 
-    public void Remove(T entity)
+    public IEnumerable<TEntity> GetAll()
+    {
+        return DbSet.AsEnumerable();
+    }
+
+    public TEntity? GetById(object id)
+    {
+        return DbSet.Find(id);
+    }
+
+    public void Remove(TEntity entity)
     {
         DbSet.Remove(entity);
     }
 
-    public void RemoveRange(IEnumerable<T> entities)
+    public void RemoveRange(IEnumerable<TEntity> entities)
     {
         DbSet.RemoveRange(entities);
     }
 
-    public void Add(T entity)
+    public void Add(TEntity entity)
     {
         DbSet.Add(entity);
     }
 
-    public T? Find(T entity)
+    public TEntity? Find(TEntity entity)
     {
         return DbSet.Find(entity);
     }
 
-    public T? Find(Func<T,bool> predicate)
+    public TEntity? FirstOrDefault(Func<TEntity,bool> predicate)
     {
         return DbSet.FirstOrDefault(predicate);
     }

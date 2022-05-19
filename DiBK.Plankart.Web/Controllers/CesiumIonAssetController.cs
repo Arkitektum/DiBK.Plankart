@@ -2,11 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Arkitektum.Cesium.Ion.RestApiSharp;
-using Arkitektum.Cesium.Ion.RestApiSharp.Util;
 using DiBK.Plankart.Application.Models.Map;
 
 namespace DiBK.Plankart.Controllers;
@@ -15,27 +12,24 @@ namespace DiBK.Plankart.Controllers;
 [Route("[controller]")]
 public class CesiumIonAssetController : BaseController
 {
-    private readonly ITerrainResourceService _terrainResourceService;
+    private readonly ICesiumIonAssetService _cesiumIonAssetService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly CesiumIonClient _cesiumIonClient;
 
     public CesiumIonAssetController(
-        ITerrainResourceService terrainResourceService,
+        ICesiumIonAssetService cesiumIonAssetService,
         IUnitOfWork unitOfWork,
-        IAccessTokenProvider accessTokenProvider,
         ILogger<CesiumIonAssetController> logger) : base(logger)
     {
-        _terrainResourceService = terrainResourceService;
+        _cesiumIonAssetService = cesiumIonAssetService;
         _unitOfWork = unitOfWork;
-        _cesiumIonClient = new CesiumIonClient(accessTokenProvider.CesiumIonToken());
     }
 
     [HttpPost("/TerrainData")]
-    public async Task<IActionResult> CreateTerrainData([FromBody] TerrainRequest terrainRequest)
+    public async Task<IActionResult> CreateTerrainData([FromBody] TerrainLocation terrainLocation)
     {
         try
         {
-            var enclosingAsset = _unitOfWork.AssetRepository.Find(a => a.Encloses(terrainRequest.Envelope));
+            var enclosingAsset = _unitOfWork.TerrainResourceRepository.FirstOrDefault(a => a.Encloses(terrainLocation.Envelope));
             if (enclosingAsset != null)
             {
                 enclosingAsset.LastAccessed = DateTime.Now;
@@ -44,12 +38,12 @@ public class CesiumIonAssetController : BaseController
                 return Ok(enclosingAsset.CesiumIonAssetId);
             }
 
-            var cesiumIonAsset = await _terrainResourceService.CreateTerrainResourceAsync(terrainRequest);
+            var cesiumIonAsset = await _cesiumIonAssetService.CreateTerrainResourceAsync(terrainLocation);
 
             if (cesiumIonAsset == null)
                 return Problem(detail: "Was not able to create terrain resource", statusCode: 500);
 
-            _unitOfWork.AssetRepository.Add(cesiumIonAsset);
+            _unitOfWork.TerrainResourceRepository.Add(cesiumIonAsset);
             await AssetCleanup(cesiumIonAsset);
             await _unitOfWork.CommitAsync();
 
@@ -66,85 +60,46 @@ public class CesiumIonAssetController : BaseController
         }
     }
 
-    private async Task AssetCleanup(CesiumIonAsset asset)
+    public async Task AssetCleanup(CesiumIonTerrainResource terrainResource)
     {
-        await DeleteRedundantAssets(asset);
+        await DeleteRedundantAssetsAsync(terrainResource);
 
-        await DeleteCorruptAssets();
+        await DeleteCorruptAssetsAsync();
 
-        await MakeSureMax4GbIsUsed();
+        await DeleteUnmappedAssetsAsync();
+
+        await DeleteStaleAssets();
     }
 
-    private async Task DeleteRedundantAssets(CesiumIonAsset asset)
+    private async Task DeleteRedundantAssetsAsync(CesiumIonTerrainResource terrainResource)
     {
-        var assetsToDelete = _unitOfWork.AssetRepository.Entities.Where(e => asset.EnclosesWithMargin(e, 500.0));
+        var idsOfCesiumAssetsToDelete =
+            _unitOfWork.TerrainResourceRepository.DeleteRedundantAssets(terrainResource);
 
-        if (!assetsToDelete.Any())
-            return;
-
-        foreach (var assetToDelete in assetsToDelete)
-            await _cesiumIonClient.DeleteAssetAsync(assetToDelete.CesiumIonAssetId);
-
-        _unitOfWork.AssetRepository.RemoveRange(assetsToDelete);
+        await _cesiumIonAssetService.DeleteAssetsFromIdsAsync(idsOfCesiumAssetsToDelete);
     }
 
-    private async Task DeleteCorruptAssets()
+    private async Task DeleteCorruptAssetsAsync()
     {
-        var assets = await _cesiumIonClient.GetAssetListAsync();
+        var idsOfTerrainResourcesToDelete = await _cesiumIonAssetService.DeleteCorruptAssetsAsync();
 
-        if (assets == null || !assets.Any())
-            return;
-
-        foreach (var asset in assets.Where(a =>
-                     a.Status is AssetStatus.DATA_ERROR or AssetStatus.ERROR || 
-                     a.Status != AssetStatus.COMPLETE && a.DateAdded.CompareTo(DateTime.Now.AddDays(-1)) < 0))
-        {
-            await _cesiumIonClient.DeleteAssetAsync(asset.Id);
-            var dbAsset = _unitOfWork.AssetRepository.Find(e => e.CesiumIonAssetId == asset.Id);
-            if (dbAsset != null)
-                _unitOfWork.AssetRepository.Remove(dbAsset);
-        }
-
-        await _unitOfWork.CommitAsync();
+        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfTerrainResourcesToDelete);
     }
 
-    private async Task MakeSureMax4GbIsUsed()
+    private async Task DeleteUnmappedAssetsAsync()
     {
-        var cesiumAssets = await _cesiumIonClient.GetAssetListAsync();
-        if (cesiumAssets == null || !cesiumAssets.Any())
-            return;
+        var assets = await _cesiumIonAssetService.GetAssetsAsync();
+        _unitOfWork.TerrainResourceRepository.DeleteUnmappedTerrainResources(assets);
 
-        var totalBytes = cesiumAssets.Aggregate(0L, (i, asset) => i + asset.Bytes);
-        var totalGigaBytes = totalBytes / Math.Pow(1024,3);
+        var resources = _unitOfWork.TerrainResourceRepository.GetAll();
+        await _cesiumIonAssetService.DeleteUnmappedAssetsAsync(resources);
+    }
 
-        if (totalGigaBytes < 4)
-            return;
+    private async Task DeleteStaleAssets()
+    {
+        var resources = _unitOfWork.TerrainResourceRepository.GetAll();
+        var idsOfAssetsToDelete = await _cesiumIonAssetService.MakeSureMax4GbIsUsedAsync(resources.ToList());
 
-        var assets = _unitOfWork.AssetRepository.Entities;
-        if (assets == null || !assets.Any())
-            return;
-
-        var assetsAsList = assets.ToList();
-
-        assetsAsList.Sort((a1, a2) => a1.PriorityScore.CompareTo(a2.PriorityScore));
-        var cesiumIdsOfAssetsToDelete = new List<int>();
-        var assetIndex = 0;
-        while (totalGigaBytes > 4)
-        {
-            var assetToDeleteFromDatabase = assetsAsList[assetIndex];
-            cesiumIdsOfAssetsToDelete.Add(assetToDeleteFromDatabase.CesiumIonAssetId);
-
-            var assetToDeleteFromCesiumIon = cesiumAssets.Find(c => c.Id == assetToDeleteFromDatabase.CesiumIonAssetId);
-
-            if (assetToDeleteFromCesiumIon == null)
-                continue;
-                
-            _unitOfWork.AssetRepository.Remove(assetToDeleteFromDatabase);
-            await _cesiumIonClient.DeleteAssetAsync(assetToDeleteFromCesiumIon.Id);
-
-            totalGigaBytes -= assetToDeleteFromCesiumIon.Bytes;
-        }
-
-        await _unitOfWork.CommitAsync();
+        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfAssetsToDelete);
     }
 }

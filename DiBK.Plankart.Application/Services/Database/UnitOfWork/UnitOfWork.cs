@@ -1,43 +1,43 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using DiBK.Plankart.Application.Models.Map;
 using Microsoft.EntityFrameworkCore;
 
 namespace DiBK.Plankart.Application.Services;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly CesiumIonResourceDbContext _dbContext;
+    private readonly CesiumIonResourceDbContext _context;
 
     #region Repositories
 
-    public IRepository<CesiumIonAsset> AssetRepository => new GenericRepository<CesiumIonAsset>(_dbContext);
+    private CesiumIonTerrainResourceRepository _cesiumIonTerrainResourceRepository;
+    public CesiumIonTerrainResourceRepository TerrainResourceRepository => _cesiumIonTerrainResourceRepository ??= new CesiumIonTerrainResourceRepository(_context);
 
     #endregion
 
-    public UnitOfWork(CesiumIonResourceDbContext dbContext)
+    public UnitOfWork(CesiumIonResourceDbContext context)
     {
-        _dbContext = dbContext;
+        _context = context;
     }
 
     public void Commit()
     {
-        _dbContext.SaveChanges();
+        _context.SaveChanges();
     }
 
     public async Task<int> CommitAsync()
     {
-        return await _dbContext.SaveChangesAsync();
+        return await _context.SaveChangesAsync();
     }
 
     public void Dispose()
     {
-        _dbContext.Dispose();
+        _context.Dispose();
     }
 
     public void RejectChanges()
     {
-        foreach (var entry in _dbContext.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
+        foreach (var entry in _context.ChangeTracker.Entries().Where(e => e.State != EntityState.Unchanged))
         {
             switch (entry.State)
             {

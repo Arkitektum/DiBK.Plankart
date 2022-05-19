@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace DiBK.Plankart.Application.Services;
 
-public interface IRepository<T> where T : class
+public interface IRepository<TEntity> where TEntity : class
 {
-    IQueryable<T> Entities { get; }
-    void Remove(T entity);
-    void RemoveRange(IEnumerable<T> entities);
-    void Add(T entity);
+    IEnumerable<TEntity> GetAll();
+    
+    void Remove(TEntity entity);
+    void RemoveRange(IEnumerable<TEntity> entities);
+    void Add(TEntity entity);
     #nullable enable
-    T? Find(T entity);
-    T? Find(Func<T, bool> predicate);
+    TEntity? GetById(object id);
+    TEntity? Find(TEntity entity);
+    TEntity? FirstOrDefault(Func<TEntity, bool> predicate);
     #nullable disable
 }
