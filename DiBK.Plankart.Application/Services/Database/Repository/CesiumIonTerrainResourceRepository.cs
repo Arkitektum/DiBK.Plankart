@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Arkitektum.Cesium.Ion.RestApiSharp.Models;
 using DiBK.Plankart.Application.Models.Map;
@@ -13,6 +13,8 @@ public class CesiumIonTerrainResourceRepository : GenericRepository<CesiumIonRes
 
     public void DeleteUnmappedTerrainResources(IEnumerable<AssetMetadata> mappedCesiumIonAssets)
     {
+        if (mappedCesiumIonAssets == null)
+            return;
 
         foreach (var asset in DbContext.TerrainResources)
         {
@@ -27,7 +29,7 @@ public class CesiumIonTerrainResourceRepository : GenericRepository<CesiumIonRes
     {
         var assetsToDelete = FindAssetsEnclosedByWithMargin(terrainResource, 500.0);
 
-        if (!assetsToDelete.Any())
+        if (assetsToDelete == null || !assetsToDelete.Any())
             return null;
 
         DbContext.TerrainResources.RemoveRange(assetsToDelete);
@@ -37,6 +39,9 @@ public class CesiumIonTerrainResourceRepository : GenericRepository<CesiumIonRes
 
     public void RemoveRangeByCesiumIonAssetsIds(IEnumerable<int> cesiumIonAssetsIds)
     {
+        if (cesiumIonAssetsIds == null)
+            return;
+
         foreach (var id in cesiumIonAssetsIds)
         {
             var asset = DbContext.TerrainResources.FirstOrDefault(t => t.CesiumIonAssetId == id);

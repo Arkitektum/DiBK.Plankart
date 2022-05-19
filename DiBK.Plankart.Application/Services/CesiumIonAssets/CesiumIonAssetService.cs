@@ -82,6 +82,9 @@ public class CesiumIonAssetService : ICesiumIonAssetService
 
     public async Task DeleteUnmappedAssetsAsync(IEnumerable<CesiumIonTerrainResource> resources)
     {
+        if (resources == null)
+            return;
+        
         var assets = await _client.GetAssetListAsync();
 
         if (assets == null || !assets.Any())
@@ -99,6 +102,9 @@ public class CesiumIonAssetService : ICesiumIonAssetService
 
     private async Task<IEnumerable<int>> DeleteAssetsAsync(List<AssetMetadata> assets)
     {
+        if (assets == null)
+            return null;
+
         foreach (var asset in assets)
             await _client.DeleteAssetAsync(asset.Id);
 

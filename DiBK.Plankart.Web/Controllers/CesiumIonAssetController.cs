@@ -1,4 +1,4 @@
-﻿using DiBK.Plankart.Application.Services;
+using DiBK.Plankart.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -76,12 +76,18 @@ public class CesiumIonAssetController : BaseController
         var idsOfCesiumAssetsToDelete =
             _unitOfWork.TerrainResourceRepository.DeleteRedundantAssets(terrainResource);
 
+        if (idsOfCesiumAssetsToDelete == null)
+            return;
+
         await _cesiumIonAssetService.DeleteAssetsFromIdsAsync(idsOfCesiumAssetsToDelete);
     }
 
     private async Task DeleteCorruptAssetsAsync()
     {
         var idsOfTerrainResourcesToDelete = await _cesiumIonAssetService.DeleteCorruptAssetsAsync();
+
+        if (idsOfTerrainResourcesToDelete == null)
+            return;
 
         _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfTerrainResourcesToDelete);
     }
