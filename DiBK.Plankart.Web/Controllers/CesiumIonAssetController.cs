@@ -60,7 +60,7 @@ public class CesiumIonAssetController : BaseController
         }
     }
 
-    public async Task AssetCleanup(CesiumIonTerrainResource terrainResource)
+    private async Task AssetCleanup(CesiumIonTerrainResource terrainResource)
     {
         await DeleteRedundantAssetsAsync(terrainResource);
 
