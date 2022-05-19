@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Arkitektum.Cesium.Ion.RestApiSharp.Models;
 using DiBK.Plankart.Application.Models.Map;
@@ -50,8 +50,14 @@ public class CesiumIonTerrainResourceRepository : GenericRepository<CesiumIonRes
         }
     }
 
-    private IQueryable<CesiumIonTerrainResource> FindAssetsEnclosedByWithMargin(CesiumIonTerrainResource terrainResource, double margin)
+    private IEnumerable<CesiumIonTerrainResource> FindAssetsEnclosedByWithMargin(CesiumIonTerrainResource newResource, double margin)
     {
-        return DbContext.TerrainResources.Where(e => terrainResource.EnclosesWithMargin(e, margin));
+        // ReSharper disable once LoopCanBeConvertedToQuery, because EnclosesWithMargin is a custom method.
+        // For more info, see: https://stackoverflow.com/questions/57872910/the-linq-expression-could-not-be-translated-and-will-be-evaluated-locally
+        foreach (var existingResource in DbContext.TerrainResources)
+        {
+            if (newResource.EnclosesWithMargin(existingResource, margin))
+                yield return existingResource;
+        }
     }
 }
