@@ -22,7 +22,7 @@ namespace DiBK.Plankart.Application.Services
             _gmlToGeoJsonService = gmlToGeoJsonService;
         }
 
-        public async Task<MapDocument> CreateMapDocument(IFormFile file)
+        public async Task<MapDocument> CreateMapDocumentAsync(IFormFile file)
         {
             var validationResult = await _validationService.ValidateAsync(file);
 
@@ -36,7 +36,7 @@ namespace DiBK.Plankart.Application.Services
                 };
             }
             
-            var document = await LoadXDocument(file);
+            var document = await LoadXDocumentAsync(file);
 
             if (document == null)
                 return null;
@@ -99,7 +99,7 @@ namespace DiBK.Plankart.Application.Services
             return document.XPath2SelectElement("//*:RpRegulertHøyde//*:høydereferansesystem")?.Value;
         }
 
-        private static async Task<XDocument> LoadXDocument(IFormFile file)
+        private static async Task<XDocument> LoadXDocumentAsync(IFormFile file)
         {
             try
             {

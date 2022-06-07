@@ -137,8 +137,8 @@ namespace DiBK.Plankart.Application.Services
             var jObject = JObject.Parse(builder.ToString());
             var values = jObject["values"] as JObject;
 
-            values.Add(new JProperty("name", featureName));
-            values.Add(new JProperty("label", $"{featureName} '{gmlId}'"));
+            values.Add(new JProperty("_name", featureName));
+            values.Add(new JProperty("_label", $"{featureName} '{gmlId}'"));
 
             return jObject["values"] as JObject;
         }
