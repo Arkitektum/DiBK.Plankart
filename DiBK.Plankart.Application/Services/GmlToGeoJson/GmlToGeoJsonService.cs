@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml.Linq;
@@ -137,10 +138,35 @@ namespace DiBK.Plankart.Application.Services
             var jObject = JObject.Parse(builder.ToString());
             var values = jObject["values"] as JObject;
 
+            /*if (featureName == "RpJuridiskPunkt")
+                SetRotationForRpJuridiskPunkt(featureMember, values);*/
+
             values.Add(new JProperty("_name", featureName));
             values.Add(new JProperty("_label", $"{featureName} '{gmlId}'"));
 
             return jObject["values"] as JObject;
+        }
+
+        private static void SetRotationForRpJuridiskPunkt(XElement featureMember, JObject values)
+        {
+            var symbolretning = featureMember.GetElement("*:symbolretning")?.Value;
+            int rotation = 0;
+
+            if (!string.IsNullOrWhiteSpace(symbolretning))
+            {
+                var points = symbolretning.Split(' ');
+                
+                if (points.Length == 2 && 
+                    double.TryParse(points[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && 
+                    double.TryParse(points[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var y))
+                {
+                    var angle = Math.Atan2(x, y);
+                    var degrees = 180 * angle / Math.PI;
+                    rotation = Convert.ToInt32((360 + Math.Round(degrees)) % 360);
+                }
+            }
+
+            values.Add(new JProperty("rotasjon", rotation));
         }
     }
 }
