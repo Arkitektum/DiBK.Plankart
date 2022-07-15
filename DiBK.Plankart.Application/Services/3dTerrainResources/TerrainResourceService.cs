@@ -28,7 +28,7 @@ public class TerrainResourceService : ITerrainResourceService
             
         await WriteFileStreamAsync(filename, stream);
 
-        var readFileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);
+        await using var readFileStream =  new FileStream(filename, FileMode.Open, FileAccess.Read);
 
         var cesiumIonAssetId = await _cesiumIonAssetUploader.UploadTerrainModelAsync(filename, readFileStream);
 
@@ -56,17 +56,26 @@ public class TerrainResourceService : ITerrainResourceService
 
     private static async Task WriteFileStreamAsync(string filename, Stream stream)
     {
-        stream.Position = 0;
-        await using var writeFileStream = new FileStream(filename, FileMode.Create, FileAccess.Write);
-        await stream.CopyToAsync(writeFileStream);
-        writeFileStream.Flush();
+        //todo: Må denne kanskje heller lagres i en BlobStorage på Azure?
+        //todo: S3-ressursen som filen/data skal lastes opp til senere krever at det er en fil med et filnavn som lastes opp...
+        try
+        {
+            stream.Position = 0;
+            await using var writeFileStream = new FileStream(filename, FileMode.Create, FileAccess.Write);
+            await stream.CopyToAsync(writeFileStream);
+            writeFileStream.Flush();
+        }
+        catch (Exception e)
+        {
+            throw new IOException($"An error occurred while trying to write to file '{filename}':\n{e}");
+        }
     }
 
     private static async Task IoCleanUpAsync(FileStream readFileStream)
     {
         await readFileStream.DisposeAsync();
 
-        if (File.Exists(readFileStream.Name))
+        if (File.Exists(readFileStream.Name)) 
             File.Delete(readFileStream.Name);
     }
 }

@@ -90,7 +90,9 @@ public class CesiumIonAssetService : ICesiumIonAssetService
         if (assets == null || !assets.Any())
             return;
 
-        foreach (var asset in assets.Where(a => resources.All(r => r.CesiumIonAssetId != a.Id)))
+        // 1179236 is the ID of an asset that should not be deleted.
+        // todo: Consider creating a separate Cesium Ion account for the terrain models
+        foreach (var asset in assets.Where(a => a.Id != 1179236 && resources.All(r => r.CesiumIonAssetId != a.Id)))
             await _client.DeleteAssetAsync(asset.Id);
     }
 

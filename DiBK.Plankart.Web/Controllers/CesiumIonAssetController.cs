@@ -1,7 +1,8 @@
-using DiBK.Plankart.Application.Services;
+﻿using DiBK.Plankart.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using DiBK.Plankart.Application.Models.Map;
@@ -29,6 +30,8 @@ public class CesiumIonAssetController : BaseController
     {
         try
         {
+            await TryPreProcessAssetCleanup();
+
             var enclosingAsset = _unitOfWork.TerrainResourceRepository.FirstOrDefault(a => a.Encloses(terrainLocation.Envelope));
             if (enclosingAsset != null)
             {
@@ -44,7 +47,7 @@ public class CesiumIonAssetController : BaseController
                 return Problem(detail: "Was not able to create terrain resource", statusCode: 500);
 
             _unitOfWork.TerrainResourceRepository.Add(cesiumIonAsset);
-            await AssetCleanup(cesiumIonAsset);
+            await TryPostProcessAssetCleanup(cesiumIonAsset);
             await _unitOfWork.CommitAsync();
 
             return Ok(cesiumIonAsset.CesiumIonAssetId);
@@ -60,15 +63,37 @@ public class CesiumIonAssetController : BaseController
         }
     }
 
-    private async Task AssetCleanup(CesiumIonTerrainResource terrainResource)
+    private async Task TryPreProcessAssetCleanup()
     {
-        await DeleteRedundantAssetsAsync(terrainResource);
+        try
+        {
+            Debug.WriteLine("Deleting corrupt assets..");
+            await DeleteCorruptAssetsAsync();
 
-        await DeleteCorruptAssetsAsync();
+            Debug.WriteLine("Deleting unmapped assets..");
+            await DeleteUnmappedAssetsAsync();
 
-        await DeleteUnmappedAssetsAsync();
+            Debug.WriteLine("Deleting stale assets..");
+            await DeleteStaleAssets();
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine("PreProcess cleanup failed: \n" + e);
+        }
+    }
 
-        await DeleteStaleAssets();
+    private async Task TryPostProcessAssetCleanup(CesiumIonTerrainResource terrainResource)
+    {
+        try
+        {
+            Debug.WriteLine("Deleting redundant assets..");
+            await DeleteRedundantAssetsAsync(terrainResource);
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine("PostProcess cleanup failed: \n" + e);
+        }
+        
     }
 
     private async Task DeleteRedundantAssetsAsync(CesiumIonTerrainResource terrainResource)
@@ -79,17 +104,21 @@ public class CesiumIonAssetController : BaseController
         if (idsOfCesiumAssetsToDelete == null)
             return;
 
+        Debug.WriteLine($"Deleting asset(s): {idsOfCesiumAssetsToDelete.Aggregate("", (s, i) => $"{s}, {i.ToString()}")}");
+
         await _cesiumIonAssetService.DeleteAssetsFromIdsAsync(idsOfCesiumAssetsToDelete);
     }
 
     private async Task DeleteCorruptAssetsAsync()
     {
-        var idsOfTerrainResourcesToDelete = await _cesiumIonAssetService.DeleteCorruptAssetsAsync();
+        var idsOfCesiumAssetsToDelete = await _cesiumIonAssetService.DeleteCorruptAssetsAsync();
 
-        if (idsOfTerrainResourcesToDelete == null)
+        if (idsOfCesiumAssetsToDelete == null || !idsOfCesiumAssetsToDelete.Any())
             return;
 
-        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfTerrainResourcesToDelete);
+        Debug.WriteLine($"Deleting asset(s): {idsOfCesiumAssetsToDelete.Aggregate("", (s, i) => $"{s}, {i.ToString()}")}");
+
+        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfCesiumAssetsToDelete);
     }
 
     private async Task DeleteUnmappedAssetsAsync()
@@ -104,8 +133,10 @@ public class CesiumIonAssetController : BaseController
     private async Task DeleteStaleAssets()
     {
         var resources = _unitOfWork.TerrainResourceRepository.GetAll();
-        var idsOfAssetsToDelete = await _cesiumIonAssetService.MakeSureMax4GbIsUsedAsync(resources.ToList());
+        var idsOfCesiumAssetsToDelete = await _cesiumIonAssetService.MakeSureMax4GbIsUsedAsync(resources.ToList());
 
-        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfAssetsToDelete);
+        Debug.WriteLine($"Deleting asset(s): {idsOfCesiumAssetsToDelete.Aggregate("", (s, i) => $"{s}, {i.ToString()}")}");
+
+        _unitOfWork.TerrainResourceRepository.RemoveRangeByCesiumIonAssetsIds(idsOfCesiumAssetsToDelete);
     }
 }
