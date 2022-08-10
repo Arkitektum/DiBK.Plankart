@@ -35,11 +35,13 @@ namespace DiBK.Plankart
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
             });
 
+            services.AddHttpContextAccessor();
             services.AddResponseCaching();
 
             services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
             services.AddTransient<IGmlToCzmlService, GmlToCzmlService>();
             services.AddTransient<IMapDocumentService, MapDocumentService>();
+            services.AddTransient<IMultipartRequestService, MultipartRequestService>();
             services.AddTransient<ICesiumIonAssetUploader, CesiumIonAssetUploader>();
             services.AddTransient<IHeightDataFetcher, HeightDataFetcher>();
             services.AddTransient<ITerrainResourceService, TerrainResourceService>();

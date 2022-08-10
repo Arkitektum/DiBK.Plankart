@@ -29,7 +29,7 @@ namespace DiBK.Plankart.Controllers
             _multipartRequestService = multipartRequestService;
         }
 
-        [HttpPost]
+        [HttpPost("/MapDocument")]
         public async Task<IActionResult> CreateMapDocument()
         {
             try
