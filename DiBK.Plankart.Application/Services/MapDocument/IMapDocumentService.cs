@@ -7,6 +7,6 @@ namespace DiBK.Plankart.Application.Services
     public interface IMapDocumentService
     {
         Task<MapDocument> CreateMapDocumentAsync(IFormFile file);
-        Task<MapDocument3D> UpdateWith3dData(IFormFile file);
+        Task<MapDocument3D> UpdateWith3dDataAsync(IFormFile file);
     }
 }

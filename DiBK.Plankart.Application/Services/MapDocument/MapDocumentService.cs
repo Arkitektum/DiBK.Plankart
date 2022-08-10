@@ -62,14 +62,14 @@ namespace DiBK.Plankart.Application.Services
             };
         }
 
-        public async Task<MapDocument3D> UpdateWith3dData(IFormFile file)
+        public async Task<MapDocument3D> UpdateWith3dDataAsync(IFormFile file)
         {
             var validationResult = await _validationService.ValidateAsync(file);
 
             if (!validationResult.XsdValidated || !validationResult.EpsgValidated)
                 return new MapDocument3D { ValidationResult = validationResult };
 
-            var document = await LoadXDocument(file);
+            var document = await LoadXDocumentAsync(file);
 
             if (document == null)
                 return null;

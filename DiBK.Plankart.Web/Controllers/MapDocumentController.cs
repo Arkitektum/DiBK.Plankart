@@ -65,7 +65,7 @@ namespace DiBK.Plankart.Controllers
                 if (file == null)
                     return BadRequest();
 
-                var mapDocument3d = await _mapDocumentService.UpdateWith3dData(file);
+                var mapDocument3d = await _mapDocumentService.UpdateWith3dDataAsync(file);
                 var serialized = JsonConvert.SerializeObject(mapDocument3d, _jsonSerializerSettings);
                 
                 return Ok(serialized);
