@@ -27,7 +27,7 @@ namespace DiBK.Plankart
             services.AddControllers();
 
             services.AddDbContext<CesiumIonResourceDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("cesiumIonDb")));
+                options.UseSqlServer(Configuration["ConnectionStrings:CesiumTerrainResourcesTest"]));
 
             services.AddSwaggerGen(options =>
             {
@@ -46,7 +46,6 @@ namespace DiBK.Plankart
             services.AddTransient<ICesiumIonAssetService, CesiumIonAssetService>();
             services.AddHttpClient<IValidationService, ValidationService>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
-            services.AddTransient<IAccessTokenProvider, AccessTokenProvider>();
 
             services.Configure<ValidationSettings>(Configuration.GetSection(ValidationSettings.SectionName));
         }

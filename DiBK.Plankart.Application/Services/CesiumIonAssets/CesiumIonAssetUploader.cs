@@ -3,16 +3,17 @@ using System.Threading.Tasks;
 using Arkitektum.Cesium.Ion.RestApiSharp;
 using Arkitektum.Cesium.Ion.RestApiSharp.Services;
 using Arkitektum.Cesium.Ion.RestApiSharp.Util;
+using Microsoft.Extensions.Configuration;
 
 namespace DiBK.Plankart.Application.Services;
 
 public class CesiumIonAssetUploader : ICesiumIonAssetUploader
 {
-    private readonly string _accessToken;
+    private readonly IConfiguration _configuration;
 
-    public CesiumIonAssetUploader(IAccessTokenProvider accessTokenProvider)
+    public CesiumIonAssetUploader(IConfiguration configuration)
     {
-        _accessToken = accessTokenProvider.CesiumIonToken();
+        _configuration = configuration;
     }
 
     public async Task<int?> UploadTerrainModelAsync(string assetName, FileStream assetFileStream)
@@ -22,6 +23,7 @@ public class CesiumIonAssetUploader : ICesiumIonAssetUploader
             description: "Se kartkatalogen - [Høyde DTM Sømløs WCS](https://kartkatalog.geonorge.no/metadata/hoeyde-dtm-smls-wcs/311782b2-26fe-4d1d-93e9-c90b45d5bd8b)."
         );
 
-        return await new CesiumIonClient(_accessToken).UploadAssetAsync(asset, assetFileStream);
+        var accessToken = _configuration["DibkPlankartCesiumAccessToken"];
+        return await new CesiumIonClient(accessToken).UploadAssetAsync(asset, assetFileStream);
     }
 }

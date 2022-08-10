@@ -6,6 +6,7 @@ using Arkitektum.Cesium.Ion.RestApiSharp;
 using Arkitektum.Cesium.Ion.RestApiSharp.Models;
 using DiBK.Plankart.Application.Extensions;
 using DiBK.Plankart.Application.Models.Map;
+using Microsoft.Extensions.Configuration;
 
 namespace DiBK.Plankart.Application.Services;
 
@@ -16,10 +17,10 @@ public class CesiumIonAssetService : ICesiumIonAssetService
 
     public CesiumIonAssetService(
         ITerrainResourceService terrainResourceService,
-        IAccessTokenProvider accessTokenProvider)
+        IConfiguration configuration)
     {
         _terrainResourceService = terrainResourceService;
-        _client = new CesiumIonClient(accessTokenProvider.CesiumIonToken());
+        _client = new CesiumIonClient(configuration["DibkPlankartCesiumAccessToken"]);
     }
 
     public async Task<List<AssetMetadata>> GetAssetsAsync()
