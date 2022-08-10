@@ -39,7 +39,7 @@ namespace DiBK.Plankart.Controllers
                 if (file == null)
                     return BadRequest();
 
-                var document = await _mapDocumentService.CreateMapDocument(file);
+                var document = await _mapDocumentService.CreateMapDocumentAsync(file);
                 var serialized = JsonConvert.SerializeObject(document, _jsonSerializerSettings);
 
                 return Ok(serialized);

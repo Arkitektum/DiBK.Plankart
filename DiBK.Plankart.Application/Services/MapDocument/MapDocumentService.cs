@@ -2,7 +2,6 @@
 using DiBK.Plankart.Application.Models.Map;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -27,7 +26,7 @@ namespace DiBK.Plankart.Application.Services
             _gmlToCzmlService = gmlToCzmlService;
         }
 
-        public async Task<MapDocument> CreateMapDocument(IFormFile file)
+        public async Task<MapDocument> CreateMapDocumentAsync(IFormFile file)
         {
             var validationResult = await _validationService.ValidateAsync(file);
 
@@ -40,8 +39,8 @@ namespace DiBK.Plankart.Application.Services
                     ValidationResult = validationResult 
                 };
             }
-
-            var document = await LoadXDocument(file);
+            
+            var document = await LoadXDocumentAsync(file);
 
             if (document == null)
                 return null;
@@ -147,7 +146,7 @@ namespace DiBK.Plankart.Application.Services
             return document.XPath2SelectElement("//*:RpRegulertHøyde//*:høydereferansesystem")?.Value;
         }
 
-        private static async Task<XDocument> LoadXDocument(IFormFile file)
+        private static async Task<XDocument> LoadXDocumentAsync(IFormFile file)
         {
             try
             {

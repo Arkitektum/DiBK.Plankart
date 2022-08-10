@@ -20,7 +20,7 @@
 	</ItemGroup>	
 
 	<ItemGroup Condition="'$(OS)' == 'Unix'">
-		<PackageReference Include="MaxRev.Gdal.LinuxRuntime.Minimal" Version="3.2.0.300" />
+		<PackageReference Include="MaxRev.Gdal.LinuxRuntime.Minimal" Version="3.3.3.120" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(OS)' != 'Unix'">

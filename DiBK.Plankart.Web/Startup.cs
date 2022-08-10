@@ -1,3 +1,4 @@
+using DiBK.Plankart.Application.HttpClients.Proxy;
 using DiBK.Plankart.Application.Models.Validation;
 using DiBK.Plankart.Application.Services;
 using Microsoft.AspNetCore.Builder;
@@ -34,18 +35,18 @@ namespace DiBK.Plankart
                 options.SwaggerDoc("v1", new OpenApiInfo { Title = "DiBK.Plankart", Version = "v1" });
             });
 
-            services.AddHttpContextAccessor();
+            services.AddResponseCaching();
 
             services.AddTransient<IGmlToGeoJsonService, GmlToGeoJsonService>();
             services.AddTransient<IGmlToCzmlService, GmlToCzmlService>();
             services.AddTransient<IMapDocumentService, MapDocumentService>();
-            services.AddTransient<IMultipartRequestService, MultipartRequestService>();
             services.AddTransient<ICesiumIonAssetUploader, CesiumIonAssetUploader>();
             services.AddTransient<IHeightDataFetcher, HeightDataFetcher>();
             services.AddTransient<ITerrainResourceService, TerrainResourceService>();
             services.AddTransient<ICesiumIonAssetService, CesiumIonAssetService>();
-            services.AddHttpClient<IValidationService, ValidationService>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddHttpClient<IValidationService, ValidationService>();
+            services.AddHttpClient<IProxyHttpClient, ProxyHttpClient>();
 
             services.Configure<ValidationSettings>(Configuration.GetSection(ValidationSettings.SectionName));
         }
@@ -78,6 +79,8 @@ namespace DiBK.Plankart
             app.UseSwaggerUI(options => options.SwaggerEndpoint("/swagger/v1/swagger.json", "DiBK.Plankart v1"));
 
             app.UseHttpsRedirection();
+
+            app.UseResponseCaching();
 
             app.UseRouting();
 

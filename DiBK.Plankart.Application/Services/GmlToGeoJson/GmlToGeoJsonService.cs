@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using OSGeo.OGR;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml.Linq;
@@ -57,32 +58,13 @@ namespace DiBK.Plankart.Application.Services
 
         private static Geometry GetOGRGeometry(XElement geoElement)
         {
-            if (!TryCreateGeometry(geoElement, out var tempGeometry))
+            if (!TryCreateGeometry(geoElement, out var geometry))
                 return null;
 
-            if (!geoElement.Has("//gml:Arc"))
-                return tempGeometry;
+            var linearGeometry = geometry.GetLinearGeometry(0, Array.Empty<string>());
+            geometry.Dispose();
 
-            Geometry geometry = null;
-            var geometryType = tempGeometry.GetGeometryType();
-
-            switch (geometryType)
-            {
-                case wkbGeometryType.wkbCircularString:
-                    geometry = Ogr.ForceToLineString(tempGeometry);
-                    break;
-                case wkbGeometryType.wkbSurface:
-                    geometry = Ogr.ForceToPolygon(tempGeometry);
-                    break;
-                case wkbGeometryType.wkbMultiSurface:
-                    geometry = Ogr.ForceToMultiPolygon(tempGeometry);
-                    break;
-                default:
-                    break;
-            }
-
-            tempGeometry.Dispose();
-            return geometry;
+            return linearGeometry;
         }
 
         private static bool TryCreateGeometry(XElement geoElement, out Geometry geometry)
@@ -168,11 +150,35 @@ namespace DiBK.Plankart.Application.Services
             var jObject = JObject.Parse(builder.ToString());
             var values = jObject["values"] as JObject;
 
-            values.Add(new JProperty("name", featureName));
-            values.Add(new JProperty("label", $"{featureName} '{gmlId}'"));
+            /*if (featureName == "RpJuridiskPunkt")
+                SetRotationForRpJuridiskPunkt(featureMember, values);*/
+            values.Add(new JProperty("_name", featureName));
+            values.Add(new JProperty("_label", $"{featureName} '{gmlId}'"));
             values.Add(new JProperty("altitudeMode", "clampToGround"));
 
             return jObject["values"] as JObject;
+        }
+
+        private static void SetRotationForRpJuridiskPunkt(XElement featureMember, JObject values)
+        {
+            var symbolretning = featureMember.GetElement("*:symbolretning")?.Value;
+            int rotation = 0;
+
+            if (!string.IsNullOrWhiteSpace(symbolretning))
+            {
+                var points = symbolretning.Split(' ');
+                
+                if (points.Length == 2 && 
+                    double.TryParse(points[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && 
+                    double.TryParse(points[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var y))
+                {
+                    var angle = Math.Atan2(x, y);
+                    var degrees = 180 * angle / Math.PI;
+                    rotation = Convert.ToInt32((360 + Math.Round(degrees)) % 360);
+                }
+            }
+
+            values.Add(new JProperty("rotasjon", rotation));
         }
     }
 }
