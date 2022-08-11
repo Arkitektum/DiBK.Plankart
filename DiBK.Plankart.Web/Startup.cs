@@ -28,7 +28,7 @@ namespace DiBK.Plankart
             services.AddControllers();
 
             services.AddDbContext<CesiumIonResourceDbContext>(options =>
-                options.UseSqlServer(Configuration["ConnectionStrings:CesiumTerrainResourcesTest"]));
+                options.UseSqlServer(Configuration["ConnectionStrings:CesiumTerrainResources"]));
 
             services.AddSwaggerGen(options =>
             {
