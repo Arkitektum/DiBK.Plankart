@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using OSGeo.OGR;
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
+using static DiBK.Plankart.Application.Configuration;
 
 namespace DiBK.Plankart
 {
@@ -28,7 +29,7 @@ namespace DiBK.Plankart
             services.AddControllers();
 
             services.AddDbContext<CesiumIonResourceDbContext>(options =>
-                options.UseSqlServer(Configuration["ConnectionStrings:CesiumTerrainResources"]));
+                options.UseSqlServer(Configuration[ConnectionStringsCesiumTerrainResources]));
 
             services.AddSwaggerGen(options =>
             {
@@ -47,6 +48,7 @@ namespace DiBK.Plankart
             services.AddTransient<ITerrainResourceService, TerrainResourceService>();
             services.AddTransient<ICesiumIonAssetService, CesiumIonAssetService>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddTransient<ICesiumIonTerrainAssetManager, CesiumIonTerrainAssetManager>();
             services.AddHttpClient<IValidationService, ValidationService>();
             services.AddHttpClient<IProxyHttpClient, ProxyHttpClient>();
 
