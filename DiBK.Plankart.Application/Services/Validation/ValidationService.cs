@@ -30,7 +30,7 @@ namespace DiBK.Plankart.Application.Services
         public async Task<ValidationResult> ValidateAsync(IFormFile file)
         {
             var report = await RunValidationAsync(file);
-            var failedRules = report.Rules.Where(rule => rule.Status == "FAILED");
+            var failedRules = report.Rules.Where(rule => rule.Status == "FAILED" || rule.Status == "WARNING");
             var xsdRule = failedRules.SingleOrDefault(rule => rule.Id == _settings.XsdRuleId);
             var result = new ValidationResult { Id = report.CorrelationId };
 
